@@ -1,0 +1,44 @@
+﻿@page "/quebank"
+@using ExamManagementSystem.Data
+@using System.Security.Principal
+@inject ExamManagementSystem.Service.Service Service
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Question Bank</PageTitle>
+<h1>Question Bank</h1>
+
+<button class="btn btn-primary" @onclick="@AddQuestion">Add Question</button>
+@if (questions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+
+    @foreach (var q in questions)
+    {
+        <div>Q : @q.QuestionText</div>
+        <br />
+        <p>Options :</p>
+        if (q.Options != null)
+        {
+            foreach (var op in q.Options)
+            {
+                <p>@op.OptText</p>
+            }
+        }
+    }
+
+}
+@code {
+    private List<Question> questions;
+    void AddQuestion()
+    {
+        UriHelper.NavigateTo("createq");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        questions = await Service.GetQuestions();
+    }
+}

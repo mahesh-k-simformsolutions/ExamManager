@@ -1,0 +1,52 @@
+﻿@page "/createq"
+
+<PageTitle>Question</PageTitle>
+@using ExamManagementSystem.Data
+@using System.Security.Principal
+@inject ExamManagementSystem.Service.Service Service
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+@if(exams == null)
+{
+    
+}
+else
+{
+<div>
+    Exam <select @bind="question.ExamId">
+        @if (exams != null)
+        {
+            @foreach (var cnt in exams)
+            {
+                <option value="@cnt.Id">@cnt.Id</option>
+            }
+        }
+</select>
+<br>
+    Question <input class="form-control" type="text" @bind="question.QuestionText" />
+    Question Type
+    <select @bind="question.QueType">
+        <option value="Subjective">Subjective</option>
+        <option value="Objective">Objective</option>
+</select>
+<br>
+    Marks <input class="form-control col-md-2" type="text" @bind="question.Marks" />
+    <br />
+    <button class="btn btn-success" @onclick="Save">Save</button>
+</div>
+}
+@code {
+    private Question question;
+    private List<Exam> exams;
+    protected override async Task OnInitializedAsync()
+    {
+        this.question = new Question();
+        this.exams = await Service.GetExams();
+    }
+    private void Save()
+    {
+        Service.SaveQuestion(question);
+        UriHelper.NavigateTo("/quebank");
+    }
+}

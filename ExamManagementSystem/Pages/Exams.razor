@@ -1,0 +1,56 @@
+﻿@page "/exams"
+
+<PageTitle>Exams</PageTitle>
+
+@using ExamManagementSystem.Data
+@inject ExamManagementSystem.Service.Service ExamService
+@inject NavigationManager UriHelper
+
+<button class="btn btn-primary" @onclick="@ConductExam">Conduct Exam</button>
+
+<h1>Exams</h1>
+
+@if (exams == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Duration (mins)</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Examiner</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var exam in exams)
+            {
+                <tr>
+                    <td>@exam.Date.ToShortDateString()</td>
+                    <td>@exam.Duration</td>
+                    <td>@exam.StartTime.TimeOfDay</td>
+                    <td>@exam.EndTime.TimeOfDay</td>
+                    <td>@exam.TeacherId</td>
+                    <td><a href="/exam/@exam.Id">Edit</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Exam> exams;
+    void ConductExam()
+    {
+        UriHelper.NavigateTo("createexam");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        exams = await ExamService.GetExams();
+    }
+}
