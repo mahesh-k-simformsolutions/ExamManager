@@ -6,6 +6,7 @@
 @inject ExamManagementSystem.Service.Service ExamService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
+@attribute [Authorize]
 
 <div>
     Start Time <input class="form-control" type="time" @bind="exam.StartTime" />

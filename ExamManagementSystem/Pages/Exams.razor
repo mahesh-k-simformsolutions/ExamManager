@@ -6,6 +6,7 @@
 @inject ExamManagementSystem.Service.Service ExamService
 @inject NavigationManager UriHelper
 
+@attribute [Authorize]
 <button class="btn btn-primary" @onclick="@ConductExam">Conduct Exam</button>
 
 <h1>Exams</h1>

@@ -7,6 +7,7 @@
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
 
+@attribute [Authorize]
 <div>
     Start Time <input class="form-control" type="time" @bind="exam.StartTime" />
     End Time <input class="form-control" type="time" @bind="exam.EndTime" />
