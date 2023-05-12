@@ -1,0 +1,59 @@
+﻿@page "/dialogcard/{examID}"
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Helpers
+@using ExamManagementSystem.Pages.Component
+@using Microsoft.EntityFrameworkCore
+@inject ExamManagementSystem.Service.ExamService ExamService
+@inject NavigationManager UriHelper
+
+@attribute [Authorize(Roles = "Student")]
+
+@inject Radzen.DialogService dialogService
+
+<RadzenStack Gap="1rem">
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="12" Class="rz-p-4 rz-border-radius-1" Style="border: var(--rz-grid-cell-border)">
+            <RadzenText TextStyle="TextStyle.Subtitle1">@exam.ExamName</RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenStack Gap="0" Class="rz-text-truncate">
+                    <RadzenText TextStyle="TextStyle.Overline" Class="rz-mt-2 rz-my-0" Style="color: var(--rz-text-tertiary-color);">Employee</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1" Class="rz-text-truncate"><b>@exam.ExamCode</b></RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline" Class="rz-mt-4 rz-mb-0" Style="color: var(--rz-text-tertiary-color);">Company</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1" Class="rz-text-truncate"><b>@exam.ExamStatus</b></RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Questions</RadzenText>
+        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text=@exam.Teacher!.Name/>
+    </RadzenStack>
+    <RadzenDataGrid AllowFiltering="true" AllowPaging="true" AllowSorting="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@questions" TItem="Question" ColumnWidth="200px" Density="Density.Compact" AllowAlternatingRows="false">
+        <Columns>
+            <RadzenDataGridColumn TItem="Question" Property="Quantity" Title="Quantity" />
+            <RadzenDataGridColumn TItem="Question" Property="Order.OrderDate" Title="Order Date" />
+            <RadzenDataGridColumn TItem="Question" Property="Discount" Title="Discount" FormatString="{0:P}" />
+        </Columns>
+    </RadzenDataGrid>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Click="@((args) => dialogService.Close(false))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Light" Text="Cancel" Style="width: 120px" />
+        <RadzenButton Click="@((args) => dialogService.Close(true))" Variant="Variant.Flat" Text="OK" Style="width: 120px" />
+    </RadzenStack>
+</RadzenStack>
+@code {
+    [Parameter] 
+    public int examID { get; set; }
+
+    Exam exam;
+    IEnumerable<Question> questions;
+    IEnumerable<User> students;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        exam = await ExamService.GetExamById(examID);
+    }
+}

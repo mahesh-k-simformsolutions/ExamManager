@@ -1,0 +1,69 @@
+﻿@page "/myexams"
+
+<PageTitle>Exams</PageTitle>
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Helpers
+@using ExamManagementSystem.Pages.Component
+@inject ExamManagementSystem.Service.ExamService ExamService
+@inject NavigationManager UriHelper
+
+@attribute [Authorize(Roles ="Student")]
+<h1>Exams</h1>
+
+@if (exams == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenDataGrid @ref="ordersGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="10" AllowSorting="true"
+                Data="@exams" TItem="Exam">
+        <Columns>
+           @* <RadzenDataGridColumn Width="50px" TItem="Exam" Title="#" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                <Template Context="data">
+                    @(exams.IndexOf(data) + 1)
+                </Template>
+            </RadzenDataGridColumn>*@
+            <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)">
+                <Template Context="data">
+                    @{var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"appear/{@data.Id}";}
+                    <RadzenText class="mb-0"> <RadzenLink Path="@link" Text="@examName" /></RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Status">
+                <Template Context="data">
+                    <ExamStatus Exam="@data"></ExamStatus>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Date">
+                <Template Context="data">
+                    <ExamDate Exam="@data"></ExamDate>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Time">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.StartTime.ToString("h:mm tt") - @data.EndTime.ToString("h:mm tt") (@data.Duration Mins)
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Examiner">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.Teacher!.Name
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    RadzenDataGrid<Exam> ordersGrid;
+    private List<Exam> exams;
+    protected override async Task OnInitializedAsync()
+    {
+        exams = await ExamService.MyExams();
+    }
+}

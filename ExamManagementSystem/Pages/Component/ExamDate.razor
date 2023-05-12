@@ -1,0 +1,24 @@
+﻿@using ExamManagementSystem.Data;
+@using ExamManagementSystem.Helpers;
+
+@switch (date)
+{
+    case "Today":
+        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Variant="Variant.Outlined" Text="@date" />
+        break;
+    case "Tomorrow":
+        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Variant="Variant.Outlined" Text="@date" />
+        break;
+    case "Yesterday":
+        <RadzenBadge BadgeStyle="BadgeStyle.Dark" Variant="Variant.Outlined" Text="@date" />
+        break;
+    default:
+        @date
+        break;
+}
+@code {
+    [Parameter]
+    public Exam Exam { get; set; }
+
+    private string date { get {return this.Exam.Date.ConvertToString(); } }
+}

@@ -1,0 +1,24 @@
+﻿@using ExamManagementSystem.Data;
+
+@switch (Exam.ExamStatus)
+{
+    case Enums.EnumExamStatus.NotStarted:
+        style = BadgeStyle.Primary;
+        break;
+    case Enums.EnumExamStatus.Cancelled:
+        style = BadgeStyle.Dark;
+        break;
+    case Enums.EnumExamStatus.Completed:
+        style = BadgeStyle.Success;
+        break;
+    case Enums.EnumExamStatus.Started:
+        style = BadgeStyle.Danger;
+        break;
+}
+<RadzenBadge BadgeStyle="@style" Variant="Variant.Outlined" Text="@Exam.ExamStatus.ToString()" />
+@code {
+    [Parameter]
+    public Exam Exam { get; set; }
+
+    BadgeStyle style { get; set; }
+}

@@ -1,22 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using ExamManagementSystem.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class ExamResult
+    public class ExamResult : EntityBase
     {
-        public int Id { get; set; }
-
-        [ForeignKey("User")]
+        [ForeignKey("Student")]
         public string StudentId { get; set; }
-        public User User { get; set; }  
+        public User Student { get; set; }
 
+        [ForeignKey("Exam")]
         public int ExamId { get; set; }
+        public Exam Exam { get; set; }
+
         public float Score { get; set; }
 
         /// <summary>
         /// Pass / Fail
         /// </summary>
-        public string Status { get; set; }
+        public ExamResultStatus Status { get; set; }
 
     }
 }
+
+

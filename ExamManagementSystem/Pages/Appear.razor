@@ -1,0 +1,99 @@
+﻿@page "/appear/{examId:int}"
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
+@using ExamManagementSystem
+@using ExamManagementSystem.Pages.Component
+@inject CommonService Service
+@inject ExamService ExamService
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
+                <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
+            </RadzenStack>
+        </div>
+        @if (Exam.ExamStatus == Enums.EnumExamStatus.Completed || Exam.ExamStatus == Enums.EnumExamStatus.Cancelled)
+        {
+            <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                <RadzenText TextStyle="TextStyle.DisplayH3"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
+            </div>
+        }
+        else
+        {
+            if ((Exam.StartTime.Date - DateTime.Now) > TimeSpan.Zero)
+            {
+                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                    <RadzenText TextStyle="TextStyle.DisplayH3">Not Started yet</RadzenText>
+                </div>
+            }
+            else if ((DateTime.Now - Exam.EndTime) > TimeSpan.Zero)
+            {
+                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                    <RadzenText TextStyle="TextStyle.DisplayH3">LATE</RadzenText>
+                </div>
+            }
+            else
+            {
+                <div class="col-md-12">
+                    @if (Exam.Questions != null)
+                    {
+                        @foreach (var item in Exam.Questions)
+                        {
+                            var bindAnswer = Answers.FirstOrDefault(x => x.QuestionId == item.Id);
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="border-bottom:1px solid grey">
+                                <RadzenText> <b>@item.QuestionText</b> </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">@item.Marks Mark(s)</RadzenText>
+                            </RadzenStack>
+                            <RadzenRadioButtonList @bind-Value=bindAnswer.AnswerId TValue="int" Orientation=Orientation.Vertical class="mb-5">
+                                <Items>
+                                    @foreach (var opt in item.Options)
+                                    {
+                                        <RadzenRadioButtonListItem Text="@opt.OptText" Value=@opt.Id />
+                                    }
+                                </Items>
+                            </RadzenRadioButtonList>
+                        }
+                    }
+                </div>
+
+            }
+        }
+    </div>
+</div>
+@code {
+    [Parameter]
+    public int examId { get; set; }
+
+    public Exam Exam = new Exam();
+    public List<Answer> Answers = new List<Answer>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Exam = await ExamService.AppearExam(examId);
+
+        var userId = await GetCurrentUserId();
+        foreach (var question in Exam.Questions)
+        {
+            Answers.Add(new Answer()
+                {
+                    QuestionId = question.Id,
+                    StudentId = userId
+                });
+        }
+
+    }
+    public async Task<string> GetCurrentUserId()
+    {
+        var authstate = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var id = user.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier.ToString()).Select(x => x.Value).FirstOrDefault();
+        return id;
+    }
+}

@@ -1,4 +1,4 @@
-﻿using ExamManagementSystem.Data;
+﻿using ExamManagementSystem.Data.DbContext;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

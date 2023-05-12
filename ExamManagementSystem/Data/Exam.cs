@@ -1,11 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using ExamManagementSystem.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class Exam
+    public class Exam : EntityBase
     {
-        public int Id { get; set; }
-
+        /// <summary>
+        /// Duration in minutes
+        /// </summary>
         public string Duration { get { return (EndTime.TimeOfDay - StartTime.TimeOfDay).TotalMinutes.ToString(); } }
 
         /// <summary>
@@ -16,10 +18,19 @@ namespace ExamManagementSystem.Data
 
         public DateTime Date { get; set; }
 
-        [ForeignKey("User")]
-        public string TeacherId { get; set; }
-        public User User { get; set; }
+        public EnumExamStatus ExamStatus { get; set; } = EnumExamStatus.NotStarted;
 
+        [ForeignKey("Teacher")]
+        public string? TeacherId { get; set; }
+        public User? Teacher { get; set; }
+
+        public string ExamCode { get; set; } = Helpers.Helpers.GenerateCode();
+        public string ExamName { get; set; }
+
+        [NotMapped]
         public ICollection<Question> Questions { get; set; }
+
+        public ICollection<ExamResult> Results { get; set; }
     }
+
 }

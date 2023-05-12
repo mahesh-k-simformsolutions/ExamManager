@@ -1,0 +1,142 @@
+﻿@page "/createexam"
+@page "/editexam/{examId:int}"
+
+<PageTitle>@title Exam</PageTitle>
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Enums
+@using ExamManagementSystem.Service
+@using System.Security.Principal
+@using Microsoft.AspNetCore.Identity;
+
+@inject CommonService Service
+@inject ExamService ExamService
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+@attribute [Authorize(Roles = "Teacher,Admin")]
+@if (exam == null)
+{
+
+}
+else
+{
+
+
+    <div Class="rz-p-0 rz-p-md-12">
+        <RadzenStack Gap="1rem" Class="rz-p-sm-12">
+            <RadzenStack Orientation=Orientation.Horizontal>
+                <RadzenFormField Text="Exam Name" Style="width:85%">
+                    <ChildContent>
+                        <RadzenTextBox Name="ExamName" Style="width: 100%;" @bind-Value=exam.ExamName />
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="Exam Code" Style="width:15%">
+                    <ChildContent>
+                        <RadzenTextBox Disabled="true" Style="width: 100%;" Name="ExamCode" Value=@exam.ExamCode />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenStack Orientation=Orientation.Horizontal>
+                <RadzenFormField Text="Start Time" Style="width:25%">
+                    <ChildContent>
+                        <RadzenDatePicker ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="StartTime" @bind-Value=exam.StartTime />
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="End Time" Style="width:25%">
+                    <ChildContent>
+                        <RadzenDatePicker Min="@exam.StartTime" ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="EndTime" @bind-Value=exam.EndTime />
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="Duration" Style="width:15%">
+                    <ChildContent>
+                        <RadzenTextBox Disabled="true" Style="width: 100%;" Name="Duration" Value=@(exam.Duration + " Mins") />
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="Date" Style="width:35%">
+                    <ChildContent>
+                        <RadzenDatePicker Min="DateTime.Now.AddDays(-1)" ShowTime="false" HourFormat="12" Change="@(ar => OnDateTimeChanged(ar))" DateFormat="dd/MM/yyyy" Style="width: 100%;" Name="Date" @bind-Value=exam.Date />
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenStack Orientation=Orientation.Horizontal>
+                <RadzenDropDown @bind-Value=@selectedStudents Data=@Students TextProperty="Name" ValueProperty="Id"
+                            Multiple=true AllowClear=true Placeholder="Select student" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            SelectAllText="Select all students" SelectedItemsText="selected" Style="width: 75%;" />
+                <RadzenDropDown Data="@(Enum.GetValues(typeof(EnumExamStatus)).Cast<Enum>())" @bind-Value=@exam.ExamStatus
+                            Disabled="@(exam.Id == 0)" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width: 25%;">
+                </RadzenDropDown>
+
+            </RadzenStack>
+            <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save"></RadzenButton>
+        </RadzenStack>
+    </div>
+}
+@code {
+
+    [Parameter]
+    public int examId { get; set; }
+
+    public string title { get; set; }
+
+    Exam exam;
+    List<User> Students = new List<User>();
+    List<string> selectedStudents = new List<string>();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (examId == 0)
+            {
+                title = "Conduct";
+                this.exam = new Exam();
+                this.exam.TeacherId = await GetCurrentUserId();
+            }
+            else
+            {
+                title = "Edit";
+                this.exam = await ExamService.GetExamById(examId);
+                var studentsOfExam = await ExamService.GetExamsToStudentByExam(examId);
+                selectedStudents = studentsOfExam.Select(x => x.StudentId).ToList();
+            }
+            Students = await Service.LoadStudents();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private void OnDateTimeChanged(DateTime? examDate = null)
+    {
+        if (examDate.HasValue)
+        {
+            this.exam.StartTime = examDate.Value.Date.Add(this.exam.StartTime.TimeOfDay);
+            this.exam.EndTime = examDate.Value.Date.Add(this.exam.EndTime.TimeOfDay);
+        }
+    }
+
+    private async Task Save()
+    {
+        await ExamService.SaveExam(exam);
+        List<ExamToStudent> examToStudents = new List<ExamToStudent>();
+        foreach (var sId in selectedStudents)
+        {
+            examToStudents.Add(new ExamToStudent()
+                {
+                    ExamId = this.exam.Id,
+                    StudentId = sId
+                });
+        }
+        await ExamService.AssignExamToStudent(examToStudents);
+        UriHelper.NavigateTo("/exams");
+    }
+
+    public async Task<string> GetCurrentUserId()
+    {
+        var authstate = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var id = user.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier.ToString()).Select(x => x.Value).FirstOrDefault();
+        return id;
+    }
+}

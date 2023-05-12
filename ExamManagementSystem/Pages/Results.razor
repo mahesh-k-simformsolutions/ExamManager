@@ -1,0 +1,73 @@
+﻿@page "/results"
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
+
+@inject ExamService ExamService
+<h3>Results</h3>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <RadzenDataGrid ColumnWidth="200px" AllowColumnResize="true" AllowColumnReorder="true" AllowPaging="true" PageSize="8" AllowSorting="true" Data="@Exams" TItem="Exam" @bind-Value="@selectedExam">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Exam" Title="ExamResults" Si>
+                        <Template Context="data">
+                            <RadzenText class="mb-0">@data.ExamName</RadzenText>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+        <div class="col-md-6">
+            <RadzenCard Style="margin-bottom:20px">
+                <b>@selectedExam?.FirstOrDefault()?.ExamName</b>
+            </RadzenCard>
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Options">
+                        <ol>
+                            @foreach (var item in selectedExam?.FirstOrDefault()?.Results)
+                            {
+                                <li> <RadzenText Style="margin-bottom:5px"> <b>@item.Status</b></RadzenText> </li>
+                            }
+                        </ol>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Details">
+                        <RadzenDataGrid Data="@selectedExam" TItem="Exam">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="Exam" Title="Mark(s)">
+                                    <Template Context="data">
+                                        <RadzenText class="mb-0">@data.Results.Count</RadzenText>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="Exam" Title="passed">
+                                    <Template Context="data">
+                                        <RadzenText class="mb-0">@data.Results.Count(x=>x.Status == Enums.ExamResultStatus.Pass)</RadzenText>
+                                    </Template>
+                                </RadzenDataGridColumn><RadzenDataGridColumn TItem="Exam" Title="failed">
+                                    <Template Context="data">
+                                        <RadzenText class="mb-0">@data.Results.Count(x=>x.Status == Enums.ExamResultStatus.Fail)</RadzenText>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+        </div>
+    </div>
+</div>
+@code {
+    public List<Exam> Exams= new List<Exam>();
+    public IList<Exam> selectedExam;
+    public List<ExamResult> ExamResults = new List<ExamResult>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ExamResults = await ExamService.GetResults();
+        Exams = ExamResults.Select(x => x.Exam).ToList();
+
+        selectedExam = new List<Exam>() { Exams.FirstOrDefault() };
+    }
+}

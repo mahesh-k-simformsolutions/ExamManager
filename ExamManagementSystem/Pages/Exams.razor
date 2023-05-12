@@ -3,55 +3,111 @@
 <PageTitle>Exams</PageTitle>
 
 @using ExamManagementSystem.Data
-@inject ExamManagementSystem.Service.Service ExamService
+@using ExamManagementSystem.Helpers
+@using System.Security.Claims;
+@using ExamManagementSystem.Enums;
+@using ExamManagementSystem.Pages.Component
+
+@inject ExamManagementSystem.Service.ExamService ExamService
 @inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+@inject DialogService DialogService
 
-@attribute [Authorize]
-<button class="btn btn-primary" @onclick="@ConductExam">Conduct Exam</button>
-
+@attribute [Authorize(Roles = "Teacher,Admin")]
 <h1>Exams</h1>
-
+<br />
 @if (exams == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Duration (mins)</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Examiner</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var exam in exams)
-            {
-                <tr>
-                    <td>@exam.Date.ToShortDateString()</td>
-                    <td>@exam.Duration</td>
-                    <td>@exam.StartTime.TimeOfDay</td>
-                    <td>@exam.EndTime.TimeOfDay</td>
-                    <td>@exam.TeacherId</td>
-                    <td><a href="/exam/@exam.Id">Edit</a></td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Conduct Exam" Style="margin-bottom:15px;" Click="@(args => UriHelper.NavigateTo("createexam"))" Size="ButtonSize.ExtraSmall"></RadzenButton>
+    <RadzenDataGrid @ref="ordersGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="7" AllowSorting="true"
+                Data="@exams" TItem="Exam">
+        <Columns>
+            <RadzenDataGridColumn Width="50px" TItem="Exam" Title="#" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                <Template Context="data">
+                    @(exams.IndexOf(data) + 1)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)">
+                <Template Context="data">
+                    <RadzenText class="mb-0">
+                        @data.ExamName (@data.ExamCode)
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Status">
+                <Template Context="data">
+                    <ExamStatus Exam="@data"></ExamStatus>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Date">
+                <Template Context="data">
+                    <ExamDate Exam="@data"></ExamDate>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Time">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.StartTime.ToString("h:mm tt") - @data.EndTime.ToString("h:mm tt") (@data.Duration Mins)
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Questions (Total Marks)">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.Questions.Count() (@data.Questions.Sum(x => x.Marks))
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Examiner">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.Teacher!.Name
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Exam" Title="Action">
+                <Template Context="data">
+                        @if (IsEditable(data))
+                        {
+                        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editexam/" + @data.Id))
+                              Text="Edit" Size="ButtonSize.ExtraSmall"></RadzenButton>
+                            <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
+                                Text="Delete" Size="ButtonSize.ExtraSmall"></RadzenButton>
+
+                        }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 
 @code {
+    RadzenDataGrid<Exam> ordersGrid;
     private List<Exam> exams;
-    void ConductExam()
-    {
-        UriHelper.NavigateTo("createexam");
-    }
+    private ClaimsPrincipal? User;
     protected override async Task OnInitializedAsync()
     {
-        exams = await ExamService.GetExams();
+        var authstate = await AuthProvider.GetAuthenticationStateAsync();
+        User = authstate.User;
+        await Refresh();
     }
+    private bool IsEditable(Exam exam)
+    {
+        var currentId = User?.GetUserId();
+        return (currentId == exam.TeacherId || User.IsInRole(EnumUserRole.Admin.ToString())) && exam.ExamStatus == EnumExamStatus.NotStarted;
+    }
+    private async Task DeleteExam(int id)
+    {
+        await ExamService.DeleteExam(id);
+        await Refresh();
+    }
+    private async Task Refresh()
+    {
+        exams = await ExamService.GetExams();   
+    }
+
 }

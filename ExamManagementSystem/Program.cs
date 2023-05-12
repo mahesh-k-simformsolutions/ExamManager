@@ -1,27 +1,47 @@
 using ExamManagementSystem.Areas.Identity;
+using ExamManagementSystem.Background;
 using ExamManagementSystem.Data;
+using ExamManagementSystem.Data.DbContext;
+using ExamManagementSystem.Helpers;
 using ExamManagementSystem.Service;
-using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString,opt => { opt.EnableRetryOnFailure(); }),ServiceLifetime.Singleton);
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false)
+
+builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false).AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-//builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddScoped<Service>();
+builder.Services.AddServerSideBlazor().AddCircuitOptions(o => {
+   o.DetailedErrors = builder.Environment.IsDevelopment();
+});
+
+builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
+builder.Services.AddScoped<IClaimsTransformation, ClaimsTransformation>();
+
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<ContextMenuService>();
+
+builder.Services.AddScoped<ExamService>();
+builder.Services.AddScoped<QuestionService>();
+builder.Services.AddScoped<CommonService>();
+
+builder.Services.AddSingleton<IHostedService, UpdateExamStatusToStarted>();
+builder.Services.AddSingleton<IHostedService, UpdateExamStatusToCompleted>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

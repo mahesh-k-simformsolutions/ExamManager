@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class Option
+    public class Option : EntityBase
     {
-        public int Id { get; set; }
         public string OptText { get; set; }
 
         [ForeignKey("Question")]

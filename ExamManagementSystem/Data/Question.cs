@@ -3,22 +3,23 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class Question
+    public class Question : EntityBase
     {
-        [Key]
-        public int QuestionId { get; set; }
-        public string QuestionText { get; set; }
-        public int Marks { get; set; }
+        public Question()
+        {
+            Exams = new List<Exam>();
+        }
+        public string? QuestionText { get; set; }
+        public float Marks { get; set; }
 
-        [ForeignKey("Exam")]
-        public int ExamId { get;set; }
-        public Exam Exam { get; set; }
+        public int CorrectOptionId { get; set; }
 
         public ICollection<Option> Options { get; set; }
 
         /// <summary>
-        /// Subjective / Objective
+        /// Exams in which this question is included
         /// </summary>
-        public string QueType { get; set; }
+        [NotMapped]
+        public List<Exam> Exams { get; set; }
     }
 }

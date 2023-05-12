@@ -1,19 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ExamManagementSystem.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class ExamToStudent
+    public class ExamToStudent : EntityBase
     {
-        [Key]
-        public int Id { get; set; }
-
-        [ForeignKey("User")]
+        [ForeignKey("Student")]
         public string StudentId { get; set; }
-        public User User { get; set; }
+        public User Student { get; set; }
 
         [ForeignKey("Exam")]
         public int ExamId { get; set; }
         public Exam Exam { get; set; }
+
+        public EnumExamToStudentStatus ExamToStudentStatus { get; set; }
     }
 }

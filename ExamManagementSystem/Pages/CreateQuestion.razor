@@ -1,53 +1,132 @@
-﻿@page "/createq"
+﻿@page "/createquestion"
+@page "/editquestion/{QueId:int}"
 
 <PageTitle>Question</PageTitle>
 @using ExamManagementSystem.Data
 @using System.Security.Principal
-@inject ExamManagementSystem.Service.Service Service
+@inject ExamManagementSystem.Service.ExamService ExamService
+@inject ExamManagementSystem.Service.QuestionService QService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
 
-@attribute [Authorize]
-@if(exams == null)
-{
-    
-}
-else
-{
-<div>
-    Exam <select @bind="question.ExamId">
-        @if (exams != null)
+@attribute [Authorize(Roles = "Teacher,Admin")]
+
+<div Class="rz-p-0 rz-p-md-12">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1" Style="border: var(--rz-grid-cell-border);">
+        <RadzenLabel Text="Exam:" />
+
+        <RadzenDropDown AllowClear="true" @bind-Value=@examToQuestion.ExamId
+                        AllowFiltering="true" Data=@exams TextProperty="ExamName" ValueProperty="Id" Style="width: 100%; max-width: 400px;" />
+    </RadzenStack>
+    <RadzenStack Gap="1rem" Class="rz-p-sm-12">
+        <RadzenFormField Text="Question" Variant="@variant">
+            <ChildContent>
+                <RadzenTextBox Name="Question" @bind-Value=question.QuestionText />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Question" Text="Question is required." />
+            </Helper>
+        </RadzenFormField>
+        <RadzenFormField Text="Marks" Variant="@variant">
+            <ChildContent>
+                <RadzenNumeric ShowUpDown="false" Min="0" Max="100" @bind-Value=question.Marks />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Marks" Text="Marks is required." />
+            </Helper>
+        </RadzenFormField>
+        <br>
+        @if (option != null && option.Count > 0)
         {
-            @foreach (var cnt in exams)
-            {
-                <option value="@cnt.Id">@cnt.Id</option>
-            }
+            <RadzenFormField Text="Option 1" Variant="@variant">
+                <ChildContent>
+                    <RadzenTextBox Name="Question" @bind-Value=option[0].OptText />
+                </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Option 2" Variant="@variant">
+                <ChildContent>
+                    <RadzenTextBox Name="Question" @bind-Value=option[1].OptText />
+                </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Option 3" Variant="@variant">
+                <ChildContent>
+                    <RadzenTextBox Name="Question" @bind-Value=option[2].OptText />
+                </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Option 4" Variant="@variant">
+                <ChildContent>
+                    <RadzenTextBox Name="Question" @bind-Value=option[3].OptText />
+                </ChildContent>
+            </RadzenFormField>
         }
-</select>
-<br>
-    Question <input class="form-control" type="text" @bind="question.QuestionText" />
-    Question Type
-    <select @bind="question.QueType">
-        <option value="Subjective">Subjective</option>
-        <option value="Objective">Objective</option>
-</select>
-<br>
-    Marks <input class="form-control col-md-2" type="text" @bind="question.Marks" />
-    <br />
-    <button class="btn btn-success" @onclick="Save">Save</button>
+
+        <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save"></RadzenButton>
+    </RadzenStack>
 </div>
-}
+
 @code {
-    private Question question;
-    private List<Exam> exams;
+    [Parameter]
+    public int QueId { get; set; }
+
+    Variant variant = Variant.Outlined;
+    private List<Exam> exams = new List<Exam>();
+    private Question question = new Question();
+    private ExamToQuestion examToQuestion = new ExamToQuestion();
+    private List<Option> option = new List<Option>();
+
     protected override async Task OnInitializedAsync()
     {
-        this.question = new Question();
-        this.exams = await Service.GetExams();
+        try
+        {
+            if (QueId == 0)
+            {
+                question = new Question();
+                option = new List<Option>()
+            {
+                new Option()
+                {
+                    QuestionId = question.Id,
+                    Question = question
+                },
+                new Option()
+                {
+                    QuestionId = question.Id,
+                    Question = question
+                },
+                new Option()
+                {
+                    QuestionId = question.Id,
+                    Question = question
+                },
+                new Option()
+                {
+                    QuestionId = question.Id,
+                    Question = question
+                }
+            };
+                examToQuestion = new ExamToQuestion(question.Id);
+                examToQuestion.Question = question;
+                question.Options = option;
+            }
+            else
+            {
+                question = await QService.GetQuestionById(QueId);
+                option = question.Options.ToList();
+                var ExamToQ = await QService.GetExamsToQuestionByQuestion(QueId);
+                examToQuestion = ExamToQ.FirstOrDefault();
+            }
+            exams = await ExamService.GetExams();
+
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
     }
     private void Save()
     {
-        Service.SaveQuestion(question);
+        QService.IncludeQuestionInExam(examToQuestion);
         UriHelper.NavigateTo("/quebank");
     }
 }
