@@ -1,5 +1,6 @@
-﻿using ExamManagementSystem.Enums;
-using Radzen;
+﻿using ExamManagementSystem.Data;
+using ExamManagementSystem.Enums;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
 namespace ExamManagementSystem.Helpers
@@ -15,6 +16,39 @@ namespace ExamManagementSystem.Helpers
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
+        public static async Task CreateAdmin(this WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            string userName = "mnkantariya173@gmail.com";
+            string password = "Gb3QC2YS@J7kg";
+            string name = "Mahesh Kantariya";
+            string roleName = EnumUserRole.Admin.ToString();
+
+            bool roleExists = await roleManager.RoleExistsAsync(roleName);
+            if (!roleExists)
+            {
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+            }
+
+            var user = await userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                user = new User
+                {
+                    Name = name,
+                    UserName = userName,
+                    Email = userName
+                };
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, roleName);
+                }
+            }
+        }
     }
     public static class ClaimsPrincipalExtensions
     {
@@ -52,6 +86,6 @@ namespace ExamManagementSystem.Helpers
                 return date.ToString("D");
             }
         }
-
     }
+
 }

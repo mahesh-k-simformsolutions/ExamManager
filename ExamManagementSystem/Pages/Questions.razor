@@ -42,45 +42,48 @@ else
                     </Columns>
                 </RadzenDataGrid>
             </div>
-            <div class="col-md-5">
-                <RadzenCard Style="margin-bottom:20px">
-                    <b>@selectedQ.FirstOrDefault()?.QuestionText</b>
-                </RadzenCard>
-                <RadzenTabs>
-                    <Tabs>
-                        <RadzenTabsItem Text="Options">
-                            <ol>
-                                @{
-                                    var options = selectedQ?.FirstOrDefault()?.Options;
-                                }
-                                @if (selectedQ.Count > 0 && options != null)
-                                {
-                                    @foreach (var item in options)
-                                    {
-                                        <li> <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText> </li>
+            @if (questions.Count > 0)
+            {
+                <div class="col-md-5">
+                    <RadzenCard Style="margin-bottom:20px">
+                        <b>@selectedQ.FirstOrDefault()?.QuestionText</b>
+                    </RadzenCard>
+                    <RadzenTabs>
+                        <Tabs>
+                            <RadzenTabsItem Text="Options">
+                                <ol>
+                                    @{
+                                        var options = selectedQ?.FirstOrDefault()?.Options;
                                     }
-                                }
-                            </ol>
-                        </RadzenTabsItem>
-                        <RadzenTabsItem Text="Details">
-                            <RadzenDataGrid Data="@selectedQ" TItem="Question">
-                                <Columns>
-                                    <RadzenDataGridColumn TItem="Question" Title="Mark(s)">
-                                        <Template Context="data">
-                                            <RadzenText class="mb-0">@data.Marks</RadzenText>
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn TItem="Question" Title="Appeared in Exams">
-                                        <Template Context="data">
-                                            <RadzenText class="mb-0">@data.Exams.Count</RadzenText>
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                </Columns>
-                            </RadzenDataGrid>
-                        </RadzenTabsItem>
-                    </Tabs>
-                </RadzenTabs>
-            </div>
+                                    @if (selectedQ?.Count > 0 && options != null)
+                                    {
+                                        @foreach (var item in options)
+                                        {
+                                            <li> <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText> </li>
+                                        }
+                                    }
+                                </ol>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Details">
+                                <RadzenDataGrid Data="@selectedQ" TItem="Question">
+                                    <Columns>
+                                        <RadzenDataGridColumn TItem="Question" Title="Mark(s)">
+                                            <Template Context="data">
+                                                <RadzenText class="mb-0">@data.Marks</RadzenText>
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                        <RadzenDataGridColumn TItem="Question" Title="Appeared in Exams">
+                                            <Template Context="data">
+                                                <RadzenText class="mb-0">@data.Exams.Count</RadzenText>
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                    </Columns>
+                                </RadzenDataGrid>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                </div>
+            }
         </div>
     </div>
 }

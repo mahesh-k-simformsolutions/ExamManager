@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
@@ -7,7 +6,7 @@ namespace ExamManagementSystem.Data
     {
         public ExamToQuestion()
         {
-            
+
         }
         public ExamToQuestion(int questionId)
         {
@@ -15,7 +14,7 @@ namespace ExamManagementSystem.Data
         }
         public ExamToQuestion(int questionId, int examId)
         {
-            QuestionId  = questionId;
+            QuestionId = questionId;
             ExamId = examId;
         }
         [ForeignKey("Question")]

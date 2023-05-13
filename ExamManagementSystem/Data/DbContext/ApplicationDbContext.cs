@@ -30,7 +30,7 @@ namespace ExamManagementSystem.Data.DbContext
             builder.Entity<ScoreCard>().HasOne(x => x.CorrectAnswer).WithMany().OnDelete(DeleteBehavior.Restrict);
             builder.Entity<ScoreCard>().HasOne(x => x.SelectedAnswer).WithMany().OnDelete(DeleteBehavior.Restrict);
             builder.Entity<ExamToQuestion>()
-                .HasIndex(x => new {x.QuestionId, x.ExamId })
+                .HasIndex(x => new { x.QuestionId, x.ExamId })
                 .IsUnique();
         }
         public override void Dispose()

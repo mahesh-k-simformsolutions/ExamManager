@@ -1,6 +1,6 @@
 ﻿using ExamManagementSystem.Data;
 using ExamManagementSystem.Data.DbContext;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -33,8 +33,8 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var exam = await _context.Exams.Include(x=>x.Teacher).FirstOrDefaultAsync(x => x.Id == id);
-                exam.Questions = await _context.ExamToQuestions.Include(x => x.Question).ThenInclude(x=>x.Options).Where(x => x.ExamId == id).Select(x=>x.Question).ToListAsync();
+                var exam = await _context.Exams.Include(x => x.Teacher).FirstOrDefaultAsync(x => x.Id == id);
+                exam.Questions = await _context.ExamToQuestions.Include(x => x.Question).ThenInclude(x => x.Options).Where(x => x.ExamId == id).Select(x => x.Question).ToListAsync();
                 return exam;
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace ExamManagementSystem.Service
 
         public async Task<List<Exam>> GetExams()
         {
-            var exams = _context.Exams.Include(x => x.Teacher).OrderBy(x => x.ExamStatus).ThenByDescending(x=>x.Date);
+            var exams = _context.Exams.Include(x => x.Teacher).OrderBy(x => x.ExamStatus).ThenByDescending(x => x.Date);
             foreach (var item in exams)
             {
                 var examToQuestions = _context.ExamToQuestions.Where(x => x.ExamId == item.Id).Select(x => x.Question);
@@ -90,25 +90,30 @@ namespace ExamManagementSystem.Service
 
         public async Task<int> AssignExamToStudent(List<ExamToStudent> examToStudent)
         {
-            var examId = examToStudent.FirstOrDefault()!.ExamId;
-            var inputStudentIds = examToStudent.Select(x => x.StudentId);
-
-            var existing = _context.ExamToStudents.Where(x => x.ExamId == examId);
-            var existingStudentIds = _context.ExamToStudents.Where(x => x.ExamId == examId).Select(x => x.StudentId);
-
-            var newStudents = inputStudentIds.Except(existingStudentIds);
-            var deleting = existingStudentIds.AsEnumerable().Except(inputStudentIds);
-
-            foreach (var item in examToStudent.Where(x => newStudents.Contains(x.StudentId)))
+            if (examToStudent.Count > 0)
             {
-                _context.ExamToStudents.Add(item);
-            }
 
-            foreach (var item in existing.Where(eTos => deleting.Contains(eTos.StudentId)))
-            {
-                _context.ExamToStudents.Remove(item);
+                var examId = examToStudent.FirstOrDefault()!.ExamId;
+                var inputStudentIds = examToStudent.Select(x => x.StudentId);
+
+                var existing = _context.ExamToStudents.Where(x => x.ExamId == examId);
+                var existingStudentIds = _context.ExamToStudents.Where(x => x.ExamId == examId).Select(x => x.StudentId);
+
+                var newStudents = inputStudentIds.Except(existingStudentIds);
+                var deleting = existingStudentIds.AsEnumerable().Except(inputStudentIds);
+
+                foreach (var item in examToStudent.Where(x => newStudents.Contains(x.StudentId)))
+                {
+                    _context.ExamToStudents.Add(item);
+                }
+
+                foreach (var item in existing.Where(eTos => deleting.Contains(eTos.StudentId)))
+                {
+                    _context.ExamToStudents.Remove(item);
+                }
+                return await _context.SaveChangesAsync();
             }
-            return await _context.SaveChangesAsync();
+            return 0;
         }
 
         public async Task<int> DeleteExam(int id)

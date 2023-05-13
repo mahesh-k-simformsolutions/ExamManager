@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString,opt => { opt.EnableRetryOnFailure(); }),ServiceLifetime.Singleton);
+    options.UseSqlServer(connectionString, opt => { opt.EnableRetryOnFailure(); }), ServiceLifetime.Singleton);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -23,8 +23,9 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor().AddCircuitOptions(o => {
-   o.DetailedErrors = builder.Environment.IsDevelopment();
+builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
+{
+    o.DetailedErrors = builder.Environment.IsDevelopment();
 });
 
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
@@ -68,5 +69,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+await app.CreateAdmin();
 
 app.Run();

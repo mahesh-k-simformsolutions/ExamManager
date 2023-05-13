@@ -27,7 +27,7 @@ namespace ExamManagementSystem.Service
 
         public async Task<List<Question>> GetQuestions()
         {
-            var questions =  _context.Questions.Include(x => x.Options);
+            var questions = _context.Questions.Include(x => x.Options);
             foreach (var item in questions)
             {
                 var examToQuestions = _context.ExamToQuestions.Where(x => x.QuestionId == item.Id).Select(x => x.Exam);
