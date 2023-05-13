@@ -31,27 +31,35 @@ else
                     @(exams.IndexOf(data) + 1)
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)">
+            <RadzenDataGridColumn Width="25%" TItem="Exam" Title="Exam name (Code)">
                 <Template Context="data">
-                    <RadzenText class="mb-0">
-                        @data.ExamName (@data.ExamCode)
-                    </RadzenText>
+                    @{
+                        var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"exam/{@data.Id}";
+                    }
+                    <RadzenText class="mb-0"> <RadzenLink Path="@link" Text="@examName" /></RadzenText>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Status">
+            <RadzenDataGridColumn Width="10.5%" TItem="Exam" Title="Status">
                 <Template Context="data">
                     <ExamStatus Exam="@data"></ExamStatus>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Date">
+            <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Date">
                 <Template Context="data">
                     <ExamDate Exam="@data"></ExamDate>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Time">
+            <RadzenDataGridColumn Width="9%" TItem="Exam" Title="Starts">
                 <Template Context="data">
                     <RadzenText>
-                        @data.StartTime.ToString("h:mm tt") - @data.EndTime.ToString("h:mm tt") (@data.Duration Mins)
+                        @data.StartTime.ToString("h:mm tt")
+                    </RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Duration">
+                <Template Context="data">
+                    <RadzenText>
+                        @data.Duration Mins
                     </RadzenText>
                 </Template>
             </RadzenDataGridColumn>

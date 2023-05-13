@@ -30,7 +30,7 @@ namespace ExamManagementSystem.Background
             {
                 connection.Open();
                 var examList = new List<Exam>();
-                string query = $"SELECT Id,EndTime FROM Exams WHERE ExamStatus=@examStatus";
+                string query = $"SELECT Id,StartTime FROM Exams WHERE ExamStatus=@examStatus";
                 using var command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@examStatus", (int)EnumExamStatus.NotStarted);
                 using var reader = command.ExecuteReader();
@@ -39,7 +39,7 @@ namespace ExamManagementSystem.Background
                     examList.Add(new Exam
                     {
                         Id = reader.GetInt32(0),
-                        EndTime = reader.GetDateTime(1),
+                        StartTime = reader.GetDateTime(1),
                     });
                 }
 

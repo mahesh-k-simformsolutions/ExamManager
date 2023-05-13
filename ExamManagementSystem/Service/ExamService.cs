@@ -43,6 +43,39 @@ namespace ExamManagementSystem.Service
                 throw;
             }
         }
+        public async Task SubmitExam(int examId, List<Answer> answers)
+        {
+            try
+            {
+                var studentId = answers.FirstOrDefault()?.StudentId;
+                await _context.Answers.AddRangeAsync(answers);
+
+                // calculate score
+                var score = 0F;
+                foreach (var item in answers)
+                {
+                    if(item.AnswerId == item.Question.CorrectOptionId)
+                    {
+                        score += item.Question.Marks;
+                    }
+                }
+                var totalMarks = answers.Select(x => x.Question).Sum(x => x.Marks);
+                var result = new ExamResult()
+                {
+                    StudentId = studentId,
+                    ExamId = examId,
+                    Score = score,
+                    Status = ((100 * score) / totalMarks) >= 33 ? Enums.ExamResultStatus.Pass : Enums.ExamResultStatus.Fail
+                };
+                _context.ExamResults.Add(result);
+
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception e)
+            {
+
+            }
+        }
         public async Task<List<ExamToStudent>> GetExamsToStudentByExam(int examId)
         {
             var examToStudents = _context.ExamToStudents.Where(x => x.ExamId == examId);

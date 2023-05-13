@@ -21,10 +21,8 @@
 }
 else
 {
-
-
-    <div Class="rz-p-0 rz-p-md-12">
-        <RadzenStack Gap="1rem" Class="rz-p-sm-12">
+    <div Class="rz-p-0 rz-md-12">
+        <RadzenStack Class="rz-p-sm-12">
             <RadzenStack Orientation=Orientation.Horizontal>
                 <RadzenFormField Text="Exam Name" Style="width:85%">
                     <ChildContent>
@@ -70,7 +68,15 @@ else
             </RadzenStack>
             <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save"></RadzenButton>
         </RadzenStack>
+        @if (exam.Id > 0)
+        {
+            <RadzenStack>
+                <ManageExamToQuestion Exam="@exam"></ManageExamToQuestion>
+            </RadzenStack>
+
+        }
     </div>
+
 }
 @code {
 

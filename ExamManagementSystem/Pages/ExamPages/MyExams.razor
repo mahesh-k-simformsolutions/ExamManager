@@ -27,7 +27,7 @@ else
             </RadzenDataGridColumn>*@
             <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)">
                 <Template Context="data">
-                    @{var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"appear/{@data.Id}";}
+                    @{var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"exam/{@data.Id}";}
                     <RadzenText class="mb-0"> <RadzenLink Path="@link" Text="@examName" /></RadzenText>
                 </Template>
             </RadzenDataGridColumn>

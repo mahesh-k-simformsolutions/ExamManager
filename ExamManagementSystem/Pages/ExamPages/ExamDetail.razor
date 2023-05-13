@@ -1,0 +1,70 @@
+﻿@page "/exam/{examId:int}"
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
+@using ExamManagementSystem.Pages.Component
+@using System.Security.Principal
+@using Microsoft.AspNetCore.Identity;
+
+@inject ExamService ExamService
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+@attribute [Authorize]
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <RadzenText TextStyle="TextStyle.DisplayH3">@Exam.ExamStatus</RadzenText>
+        </div>
+        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b></RadzenText>
+                <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
+            </RadzenStack>
+        </div>
+        <AuthorizeView Roles="Teacher,Admin">
+            <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                    <RadzenText>Examiner: @Exam.Teacher?.Name</RadzenText>
+                    <RadzenText>Students appearing for this exam: @Students.Count</RadzenText>
+                </RadzenStack>
+            </div>
+            @if (Exam.ExamStatus == Enums.EnumExamStatus.NotStarted)
+            {
+                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"editexam/{examId}")) Text="Edit"></RadzenButton>
+
+                </div>
+            }
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Student">
+            @if (Exam.ExamStatus == Enums.EnumExamStatus.Started)
+            {
+                <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"appear/{examId}")) Text="Start"></RadzenButton>
+            }
+        </AuthorizeView>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public int examId { get; set; }
+    Exam Exam = new Exam();
+
+    List<ExamToStudent> Students = new List<ExamToStudent>();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Exam = await ExamService.GetExamById(examId);
+            Students = await ExamService.GetExamsToStudentByExam(examId);
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+}

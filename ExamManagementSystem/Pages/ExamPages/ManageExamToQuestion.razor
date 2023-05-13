@@ -1,0 +1,227 @@
+﻿@using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
+@using ExamManagementSystem
+@using ExamManagementSystem.Pages.Component
+@using Microsoft.EntityFrameworkCore
+@using NuGet.Packaging;
+
+@inject CommonService Service
+@inject ExamService ExamService
+@inject QuestionService QuestionService
+@inject NavigationManager UriHelper
+@inject AuthenticationStateProvider AuthProvider
+
+<div class="p-3 border border-1">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <RadzenText TextStyle="TextStyle.DisplayH5" Text="Questions"></RadzenText>
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Style="width:10%;" Icon="add_circle_outline" class="mt-2 mb-4" Text="Add" Click="@InsertRow"
+                      Disabled=@(orderToInsert != null || orderToUpdate != null) />
+    </RadzenStack>
+
+    <RadzenDataGrid AllowCompositeDataCells="true" @ref="ordersGrid" AllowAlternatingRows="false" AllowPaging="true"
+                    PageSize="5" EditMode="DataGridEditMode.Single"
+                    Data="@orders" TItem="Question" RowUpdate="@OnUpdateRow"
+                    RowCreate="@OnCreateRow" Sort="@Reset" Page="@Reset" Filter="@Reset">
+        <Columns>
+            <RadzenDataGridColumn TItem="Question" Property="QuestionText" Title="Question" Width="35%">
+                <EditTemplate Context="order">
+                    <RadzenTextArea Rows="4" @bind-Value="order.QuestionText" Style="width:100%;height:100%; display: block;" />
+
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Question" Title="Option 1" Width="40%">
+                <Template Context="order">
+                    @order.Options.ElementAt(0).OptText
+                </Template>
+                <EditTemplate Context="order">
+                    <RadzenTextBox @bind-Value="order.Options.ElementAt(0).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                </EditTemplate>
+                <Columns>
+                    <RadzenDataGridColumn TItem="Question" Title="Option 2">
+                        <Template Context="order">
+                            @order.Options.ElementAt(1).OptText
+                        </Template>
+                        <EditTemplate Context="order">
+                            <RadzenTextBox @bind-Value="order.Options.ElementAt(1).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                        </EditTemplate>
+                        <Columns>
+
+                            <RadzenDataGridColumn TItem="Question" Title="Option 3">
+                                <Template Context="order">
+                                    @order.Options.ElementAt(2).OptText
+                                </Template>
+                                <EditTemplate Context="order">
+                                    <RadzenTextBox @bind-Value="order.Options.ElementAt(2).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                                </EditTemplate>
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="Question" Title="Option 4">
+                                        <Template Context="order">
+                                            @order.Options.ElementAt(3).OptText
+                                        </Template>
+                                        <EditTemplate Context="order">
+                                            <RadzenTextBox @bind-Value="order.Options.ElementAt(3).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                                           
+                                        </EditTemplate>
+                                    </RadzenDataGridColumn>
+
+                                </Columns>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGridColumn>
+
+                </Columns>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Question" Title="Marks" Property="Marks" Width="7%">
+                <EditTemplate Context="order">
+                    <RadzenNumeric ShowUpDown="false" Min="1" Max="100" @bind-Value="order.Marks"></RadzenNumeric>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Question" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="18%">
+                <Template Context="order">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(order))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="order">
+                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(order))">
+                    </RadzenButton>
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(order))">
+                    </RadzenButton>
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(order))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+@code {
+    [Parameter]
+    public Exam Exam { get; set; }
+
+    RadzenDataGrid<Question> ordersGrid;
+    IEnumerable<Question> orders = new List<Question>();
+    // IEnumerable<Customer> customers;
+    //IEnumerable<Employee> employees;
+
+    private Question question = new Question();
+    private List<ExamToQuestion> examToQuestions = new List<ExamToQuestion>();
+
+    Question orderToInsert;
+    Question orderToUpdate;
+
+    void Reset()
+    {
+        orderToInsert = null;
+        orderToUpdate = null;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        //  customers = dbContext.Customers;
+        // employees = dbContext.Employees;
+        if (Exam.Id > 0)
+        {
+            orders = await QuestionService.LoadQuestionsByExam(Exam.Id);
+        }
+    }
+
+    async Task EditRow(Question order)
+    {
+        orderToUpdate = order;
+        await ordersGrid.EditRow(order);
+    }
+
+    void OnUpdateRow(Question order)
+    {
+        if (order == orderToInsert)
+        {
+            orderToInsert = null;
+        }
+
+        orderToUpdate = null;
+
+        QuestionService.SaveQuestion(order);
+        QuestionService.IncludeQuestionInExam(new List<ExamToQuestion>() { examToQuestions?.FirstOrDefault(x => x.Question == order) });
+    }
+
+    async Task SaveRow(Question order)
+    {
+        await ordersGrid.UpdateRow(order);
+    }
+
+    void CancelEdit(Question order)
+    {
+        if (order == orderToInsert)
+        {
+            orderToInsert = null;
+        }
+
+        orderToUpdate = null;
+
+        ordersGrid.CancelEditRow(order);
+
+        //var orderEntry = dbContext.Entry(order);
+        //if (orderEntry.State == EntityState.Modified)
+        //{
+        //    orderEntry.CurrentValues.SetValues(orderEntry.OriginalValues);
+        //    orderEntry.State = EntityState.Unchanged;
+        //}
+    }
+
+    async Task DeleteRow(Question order)
+    {
+        if (order == orderToInsert)
+        {
+            orderToInsert = null;
+        }
+
+        if (order == orderToUpdate)
+        {
+            orderToUpdate = null;
+        }
+
+        if (orders.Contains(order))
+        {
+            QuestionService.DeleteQ(order.Id);
+
+            await ordersGrid.Reload();
+        }
+        else
+        {
+            ordersGrid.CancelEditRow(order);
+            await ordersGrid.Reload();
+        }
+    }
+
+    async Task InsertRow()
+    {
+        orderToInsert = new Question();
+        orderToInsert.Options = new List<Option>();
+        for (int i = 0; i < 4; i++)
+        {
+            orderToInsert.Options.Add(
+                new Option()
+                    {
+                        QuestionId = question.Id,
+                        Question = orderToInsert
+                    });
+        }
+        examToQuestions.Add(new ExamToQuestion()
+            {
+                ExamId = this.Exam.Id,
+                Question = orderToInsert,
+                QuestionId = orderToInsert.Id
+            });
+        await ordersGrid.InsertRow(orderToInsert);
+    }
+
+    void OnCreateRow(Question order)
+    {
+        QuestionService.SaveQuestion(order);
+        QuestionService.IncludeQuestionInExam(new List<ExamToQuestion>() { examToQuestions?.FirstOrDefault(x => x.Question == order) });
+        orderToInsert = null;
+    }
+}

@@ -4,10 +4,13 @@
 @using ExamManagementSystem.Service
 @using ExamManagementSystem
 @using ExamManagementSystem.Pages.Component
+
 @inject CommonService Service
 @inject ExamService ExamService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
+@inject DialogService DialogService
+@inject IJSRuntime JsRuntime
 
 <div class="container-fluid">
     <div class="row">
@@ -19,7 +22,7 @@
                 <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
             </RadzenStack>
         </div>
-        @if (Exam.ExamStatus == Enums.EnumExamStatus.Completed || Exam.ExamStatus == Enums.EnumExamStatus.Cancelled)
+        @if (Exam.ExamStatus != Enums.EnumExamStatus.Started)
         {
             <div class="col-md-12 border border-1 p-1 mb-5 text-center">
                 <RadzenText TextStyle="TextStyle.DisplayH3"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
@@ -27,44 +30,33 @@
         }
         else
         {
-            if ((Exam.StartTime.Date - DateTime.Now) > TimeSpan.Zero)
-            {
-                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
-                    <RadzenText TextStyle="TextStyle.DisplayH3">Not Started yet</RadzenText>
-                </div>
-            }
-            else if ((DateTime.Now - Exam.EndTime) > TimeSpan.Zero)
-            {
-                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
-                    <RadzenText TextStyle="TextStyle.DisplayH3">LATE</RadzenText>
-                </div>
-            }
-            else
-            {
-                <div class="col-md-12">
-                    @if (Exam.Questions != null)
+            <div class="col-md-12">
+                @if (Exam.Questions != null)
+                {
+                    @foreach (var item in Exam.Questions)
                     {
-                        @foreach (var item in Exam.Questions)
-                        {
-                            var bindAnswer = Answers.FirstOrDefault(x => x.QuestionId == item.Id);
-                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="border-bottom:1px solid grey">
-                                <RadzenText> <b>@item.QuestionText</b> </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">@item.Marks Mark(s)</RadzenText>
-                            </RadzenStack>
-                            <RadzenRadioButtonList @bind-Value=bindAnswer.AnswerId TValue="int" Orientation=Orientation.Vertical class="mb-5">
-                                <Items>
-                                    @foreach (var opt in item.Options)
-                                    {
-                                        <RadzenRadioButtonListItem Text="@opt.OptText" Value=@opt.Id />
-                                    }
-                                </Items>
-                            </RadzenRadioButtonList>
-                        }
+                        var bindAnswer = Answers.FirstOrDefault(x => x.QuestionId == item.Id);
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="border-bottom:1px solid grey">
+                            <RadzenText> <b>@item.QuestionText</b> </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">@item.Marks Mark(s)</RadzenText>
+                        </RadzenStack>
+                        <RadzenRadioButtonList @bind-Value=bindAnswer.AnswerId TValue="int" Orientation=Orientation.Vertical class="mb-5">
+                            <Items>
+                                @foreach (var opt in item.Options)
+                                {
+                                    <RadzenRadioButtonListItem Text="@opt.OptText" Value=@opt.Id />
+                                }
+                            </Items>
+                        </RadzenRadioButtonList>
                     }
-                </div>
-
-            }
+                }
+            </div>
         }
+        <div class="rz-p-12 rz-text-align-center">
+            <RadzenButton Text="Submit Exam" ButtonStyle="ButtonStyle.Primary"
+                          Click=@(args => ConfirmDialog()) />
+                       
+        </div>
     </div>
 </div>
 @code {
@@ -74,6 +66,15 @@
     public Exam Exam = new Exam();
     public List<Answer> Answers = new List<Answer>();
 
+    async Task ConfirmDialog()
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure to want to submit?");
+        if (confirmed)
+        {
+            await ExamService.SubmitExam(examId, Answers);
+            UriHelper.NavigateTo("/");
+        }
+    }
     protected override async Task OnInitializedAsync()
     {
         Exam = await ExamService.AppearExam(examId);
@@ -84,6 +85,7 @@
             Answers.Add(new Answer()
                 {
                     QuestionId = question.Id,
+                    Question = question,
                     StudentId = userId
                 });
         }

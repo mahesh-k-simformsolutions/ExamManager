@@ -18,6 +18,10 @@ namespace ExamManagementSystem.Service
         {
             return await _context.Questions.Include(x => x.Options).FirstOrDefaultAsync(x => x.Id == id);
         }
+        public async Task<List<Question>> LoadQuestionsByExam(int examId)
+        {
+            return await _context.Questions.Include(q => q.Options).ToListAsync();
+        }
 
         public async Task<List<ExamToQuestion>> GetExamsToQuestionByQuestion(int qId)
         {
@@ -49,15 +53,18 @@ namespace ExamManagementSystem.Service
             return _context.SaveChanges();
         }
 
-        public int IncludeQuestionInExam(ExamToQuestion examToQuestion)
+        public int IncludeQuestionInExam(List<ExamToQuestion> examToQuestions)
         {
-            if (examToQuestion.Id > 0)
+            foreach (var examToQuestion in examToQuestions)
             {
-                _context.ExamToQuestions.Update(examToQuestion);
-            }
-            else
-            {
-                _context.ExamToQuestions.Add(examToQuestion);
+                if (examToQuestion.Id > 0)
+                {
+                    _context.ExamToQuestions.Update(examToQuestion);
+                }
+                else
+                {
+                    _context.ExamToQuestions.Add(examToQuestion);
+                }
             }
             return _context.SaveChanges();
         }

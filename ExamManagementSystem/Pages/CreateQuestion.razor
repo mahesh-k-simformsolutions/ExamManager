@@ -11,7 +11,9 @@
 
 @attribute [Authorize(Roles = "Teacher,Admin")]
 
-<div Class="rz-p-0 rz-p-md-12">
+<h3> Under construction</h3>
+<p>use exam edit to create/update question</p>
+@*<div Class="rz-p-0 rz-p-md-12">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1" Style="border: var(--rz-grid-cell-border);">
         <RadzenLabel Text="Exam:" />
 
@@ -63,7 +65,7 @@
         <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save"></RadzenButton>
     </RadzenStack>
 </div>
-
+*@
 @code {
     [Parameter]
     public int QueId { get; set; }
@@ -115,7 +117,7 @@
                 var ExamToQ = await QService.GetExamsToQuestionByQuestion(QueId);
                 examToQuestion = ExamToQ.FirstOrDefault();
             }
-            exams = await ExamService.GetExams();
+            exams = (await ExamService.GetExams()).Where(x => x.ExamStatus == Enums.EnumExamStatus.NotStarted).ToList();
 
         }
         catch (Exception)
@@ -126,7 +128,7 @@
     }
     private void Save()
     {
-        QService.IncludeQuestionInExam(examToQuestion);
+        QService.IncludeQuestionInExam(new List<ExamToQuestion>() { examToQuestion });
         UriHelper.NavigateTo("/quebank");
     }
 }
