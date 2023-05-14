@@ -28,6 +28,9 @@ namespace ExamManagementSystem.Data
         public string ExamName { get; set; }
 
         [NotMapped]
+        public bool IsAppearedByCurrentStudent { get; set; }
+
+        [NotMapped]
         public ICollection<Question> Questions { get; set; }
 
         public ICollection<ExamResult> Results { get; set; }

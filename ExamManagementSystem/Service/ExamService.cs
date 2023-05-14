@@ -33,8 +33,10 @@ namespace ExamManagementSystem.Service
         {
             try
             {
+                var userId = _contextAccessor.HttpContext!.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value;
                 var exam = await _context.Exams.Include(x => x.Teacher).FirstOrDefaultAsync(x => x.Id == id);
                 exam.Questions = await _context.ExamToQuestions.Include(x => x.Question).ThenInclude(x => x.Options).Where(x => x.ExamId == id).Select(x => x.Question).ToListAsync();
+                exam.IsAppearedByCurrentStudent = _context.ExamResults.Any(x => x.StudentId == userId && x.ExamId == id);
                 return exam;
             }
             catch (Exception ex)
@@ -54,7 +56,7 @@ namespace ExamManagementSystem.Service
                 var score = 0F;
                 foreach (var item in answers)
                 {
-                    if(item.AnswerId == item.Question.CorrectOptionId)
+                    if(item.Option.IsCorrect)
                     {
                         score += item.Question.Marks;
                     }

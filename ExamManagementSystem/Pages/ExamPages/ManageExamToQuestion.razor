@@ -19,61 +19,61 @@
     </RadzenStack>
 
     <RadzenDataGrid AllowCompositeDataCells="true" @ref="ordersGrid" AllowAlternatingRows="false" AllowPaging="true"
-                    PageSize="5" EditMode="DataGridEditMode.Single"
-                    Data="@orders" TItem="Question" RowUpdate="@OnUpdateRow"
+                    PageSize="5" EditMode="DataGridEditMode.Single" AllowColumnResize="true" Data="@orders" TItem="Question" RowUpdate="@OnUpdateRow"
                     RowCreate="@OnCreateRow" Sort="@Reset" Page="@Reset" Filter="@Reset">
         <Columns>
             <RadzenDataGridColumn TItem="Question" Property="QuestionText" Title="Question" Width="35%">
                 <EditTemplate Context="order">
                     <RadzenTextArea Rows="4" @bind-Value="order.QuestionText" Style="width:100%;height:100%; display: block;" />
-
                 </EditTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Title="Option 1" Width="40%">
-                <Template Context="order">
-                    @order.Options.ElementAt(0).OptText
-                </Template>
+            <RadzenDataGridColumn TItem="Question" Title="Option 1" Width="35%">
+                <Template Context="order">1. @order.Options.ElementAt(0).OptText </Template>
                 <EditTemplate Context="order">
-                    <RadzenTextBox @bind-Value="order.Options.ElementAt(0).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                    <RadzenTextBox @bind-Value="order.Options.ElementAt(0).OptText" Style="width:100%; display: block;" />
                 </EditTemplate>
                 <Columns>
                     <RadzenDataGridColumn TItem="Question" Title="Option 2">
-                        <Template Context="order">
-                            @order.Options.ElementAt(1).OptText
-                        </Template>
+                        <Template Context="order">2. @order.Options.ElementAt(1).OptText</Template>
                         <EditTemplate Context="order">
-                            <RadzenTextBox @bind-Value="order.Options.ElementAt(1).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                            <RadzenTextBox @bind-Value="order.Options.ElementAt(1).OptText" Style="width:100%; display: block;" />
                         </EditTemplate>
                         <Columns>
-
                             <RadzenDataGridColumn TItem="Question" Title="Option 3">
-                                <Template Context="order">
-                                    @order.Options.ElementAt(2).OptText
-                                </Template>
+                                <Template Context="order">3. @order.Options.ElementAt(2).OptText</Template>
                                 <EditTemplate Context="order">
-                                    <RadzenTextBox @bind-Value="order.Options.ElementAt(2).OptText" Style="width:100%; display: block;"></RadzenTextBox>
+                                    <RadzenTextBox @bind-Value="order.Options.ElementAt(2).OptText" Style="width:100%; display: block;" />
                                 </EditTemplate>
                                 <Columns>
                                     <RadzenDataGridColumn TItem="Question" Title="Option 4">
-                                        <Template Context="order">
-                                            @order.Options.ElementAt(3).OptText
-                                        </Template>
+                                        <Template Context="order">4. @order.Options.ElementAt(3).OptText</Template>
                                         <EditTemplate Context="order">
-                                            <RadzenTextBox @bind-Value="order.Options.ElementAt(3).OptText" Style="width:100%; display: block;"></RadzenTextBox>
-                                           
+                                            <RadzenTextBox @bind-Value="order.Options.ElementAt(3).OptText" Style="width:100%; display: block;" />
                                         </EditTemplate>
                                     </RadzenDataGridColumn>
-
                                 </Columns>
                             </RadzenDataGridColumn>
                         </Columns>
                     </RadzenDataGridColumn>
-
                 </Columns>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Title="Marks" Property="Marks" Width="7%">
+            <RadzenDataGridColumn TItem="Question" Title="Marks" Property="Marks" Width="9%">
                 <EditTemplate Context="order">
-                    <RadzenNumeric ShowUpDown="false" Min="1" Max="100" @bind-Value="order.Marks"></RadzenNumeric>
+                    <RadzenNumeric ShowUpDown="false" Min="1" Max="100" @bind-Value="order.Marks" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Question" Title="Correct Option" Property="Marks" Width="7%">
+                <Template Context="order">@order.Options?.FirstOrDefault(x=>x.IsCorrect)?.OptText</Template>
+                <EditTemplate Context="order">
+                    <RadzenRadioButtonList @bind-Value=@order.CorrectOptionIndex Change="@(args => UpdateCorrectOption(order))" TValue="int" Orientation=Orientation.Vertical>
+                        <Items>
+                            @for (int i = 0; i < order.Options.Count; i++)
+                            {
+                                var txt = (i + 1).ToString();
+                                <RadzenRadioButtonListItem Text="@txt" Value=@i />
+                            }
+                        </Items>
+                    </RadzenRadioButtonList>
                 </EditTemplate>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Question" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="18%">
@@ -101,8 +101,6 @@
 
     RadzenDataGrid<Question> ordersGrid;
     IEnumerable<Question> orders = new List<Question>();
-    // IEnumerable<Customer> customers;
-    //IEnumerable<Employee> employees;
 
     private Question question = new Question();
     private List<ExamToQuestion> examToQuestions = new List<ExamToQuestion>();
@@ -119,9 +117,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        //  customers = dbContext.Customers;
-        // employees = dbContext.Employees;
         if (Exam.Id > 0)
         {
             orders = await QuestionService.LoadQuestionsByExam(Exam.Id);
@@ -140,11 +135,8 @@
         {
             orderToInsert = null;
         }
-
         orderToUpdate = null;
-
         QuestionService.SaveQuestion(order);
-        QuestionService.IncludeQuestionInExam(new List<ExamToQuestion>() { examToQuestions?.FirstOrDefault(x => x.Question == order) });
     }
 
     async Task SaveRow(Question order)
@@ -158,17 +150,8 @@
         {
             orderToInsert = null;
         }
-
         orderToUpdate = null;
-
         ordersGrid.CancelEditRow(order);
-
-        //var orderEntry = dbContext.Entry(order);
-        //if (orderEntry.State == EntityState.Modified)
-        //{
-        //    orderEntry.CurrentValues.SetValues(orderEntry.OriginalValues);
-        //    orderEntry.State = EntityState.Unchanged;
-        //}
     }
 
     async Task DeleteRow(Question order)
@@ -206,7 +189,8 @@
                 new Option()
                     {
                         QuestionId = question.Id,
-                        Question = orderToInsert
+                        Question = orderToInsert,
+                        IsCorrect = i == 0
                     });
         }
         examToQuestions.Add(new ExamToQuestion()
@@ -223,5 +207,14 @@
         QuestionService.SaveQuestion(order);
         QuestionService.IncludeQuestionInExam(new List<ExamToQuestion>() { examToQuestions?.FirstOrDefault(x => x.Question == order) });
         orderToInsert = null;
+    }
+
+    void UpdateCorrectOption(Question question)
+    {
+        var correct = question.Options.ElementAt(question.CorrectOptionIndex);
+        foreach (var opt in question.Options)
+        {
+            opt.IsCorrect = opt == correct ? true : false;
+        }
     }
 }

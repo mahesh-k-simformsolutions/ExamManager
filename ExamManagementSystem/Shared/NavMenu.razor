@@ -13,44 +13,46 @@
         <AuthorizeView Roles="Admin">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="dashboard">
-                    <span class="oi oi-dashboard" aria-hidden="true"></span> Dashboard
+                    <RadzenIcon Icon="dashboard" /> <span>&nbsp;Dashboard</span>
                 </NavLink>
             </div>
         </AuthorizeView>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+                    <RadzenIcon Icon="home" /> <span>&nbsp;Home</span>
             </NavLink>
         </div>
         <AuthorizeView Roles="Student">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="myexams">
-                    <span class="oi oi-book" aria-hidden="true"></span> My Exams
+                    <RadzenIcon Icon="assignment" /> <span>&nbsp;My Exams</span>
                 </NavLink>
             </div>
         </AuthorizeView>
         <AuthorizeView Roles="Teacher,Admin">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="exams">
-                    <span class="oi oi-book" aria-hidden="true"></span> Exams
+                    <RadzenIcon Icon="assignment" /> <span>&nbsp;Exams</span>
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="questions">
-                    <span class="oi oi-question-mark" aria-hidden="true"></span> Questions
+                    <RadzenIcon Icon="help_outline" /> <span>&nbsp;Questions</span>
                 </NavLink>
             </div
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="results">
-                    <span class="oi oi-result" aria-hidden="true"></span> Results
+                    <RadzenIcon Icon="list" /> <span>&nbsp;Results</span>
                 </NavLink>
             </div>
         </AuthorizeView>
-        @*  <div class="nav-item px-3">
-            <NavLink class="nav-link" href="quebank">
-                <span class="oi oi-question-mark" aria-hidden="true"></span> Question Bank
-            </NavLink>
-        </div>*@
+         <AuthorizeView Roles="Student">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="myscorecard">
+                    <RadzenIcon Icon="assignment_turned_in" /> <span>&nbsp;Scorecard</span>
+                </NavLink>
+            </div>
+        </AuthorizeView>
     </nav>
 </div>
 

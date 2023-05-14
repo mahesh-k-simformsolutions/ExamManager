@@ -7,11 +7,13 @@ namespace ExamManagementSystem.Data
         public Question()
         {
             Exams = new List<Exam>();
+            CorrectOptionIndex = GetCorrectOptionIndex();
         }
         public string? QuestionText { get; set; }
         public float Marks { get; set; }
 
-        public int CorrectOptionId { get; set; }
+        [NotMapped]
+        public int CorrectOptionIndex { get; set; }
 
         public ICollection<Option> Options { get; set; }
 
@@ -20,5 +22,15 @@ namespace ExamManagementSystem.Data
         /// </summary>
         [NotMapped]
         public List<Exam> Exams { get; set; }
+
+        private int GetCorrectOptionIndex()
+        {
+            if(Options != null && Options.Count > 0)
+            {
+                var correct = Options.FirstOrDefault(x => x.IsCorrect);
+                return Options.ToList().IndexOf(correct);
+            }
+            return -1;
+        }
     }
 }

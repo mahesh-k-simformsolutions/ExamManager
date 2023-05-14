@@ -14,22 +14,34 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+        <div class="col-md-12 border border-1 p-2 m-3 text-center">
             <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
                 <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
+                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
                 <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
             </RadzenStack>
         </div>
         @if (Exam.ExamStatus != Enums.EnumExamStatus.Started)
         {
-            <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <div class="col-md-12 border border-1 p-1 m-3 text-center">
                 <RadzenText TextStyle="TextStyle.DisplayH3"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
             </div>
         }
         else
         {
+            if (Exam.IsAppearedByCurrentStudent)
+            {
+                <div class="col-md-12 m-3 text-center">
+                    <RadzenText TextStyle="TextStyle.DisplayH3" class="text-success">You submitted this exam already</RadzenText>
+                </div>
+
+                <div class="col-md-12 m-3 text-center">
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"myexams")) Text="Back to my exams"></RadzenButton>
+                </div>
+            }
+            else
+            {
             <div class="col-md-12">
                 @if (Exam.Questions != null)
                 {
@@ -51,12 +63,11 @@
                     }
                 }
             </div>
+            <div class="rz-p-12 rz-text-align-center">
+                <RadzenButton Text="Submit Exam" ButtonStyle="ButtonStyle.Primary" Click=@(args => ConfirmDialog()) />
+                </div>
+            }
         }
-        <div class="rz-p-12 rz-text-align-center">
-            <RadzenButton Text="Submit Exam" ButtonStyle="ButtonStyle.Primary"
-                          Click=@(args => ConfirmDialog()) />
-                       
-        </div>
     </div>
 </div>
 @code {

@@ -14,16 +14,16 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
-            <RadzenText TextStyle="TextStyle.DisplayH3">@Exam.ExamStatus</RadzenText>
-        </div>
-        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+        <div class="col-md-12 border border-1 p-1 m-3 text-center">
             <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b></RadzenText>
                 <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
+                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
                 <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
             </RadzenStack>
+        </div>
+        <div class="col-md-12 border border-1 p-1 m-3 text-center">
+            <RadzenText TextStyle="TextStyle.DisplayH3">@Exam.ExamStatus</RadzenText>
         </div>
         <AuthorizeView Roles="Teacher,Admin">
             <div class="col-md-12 border border-1 p-1 mb-5 text-center">
@@ -34,7 +34,7 @@
             </div>
             @if (Exam.ExamStatus == Enums.EnumExamStatus.NotStarted)
             {
-                <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+                <div class="col-md-12 p-1 m-3 text-center">
                     <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"editexam/{examId}")) Text="Edit"></RadzenButton>
 
                 </div>
@@ -44,7 +44,9 @@
         <AuthorizeView Roles="Student">
             @if (Exam.ExamStatus == Enums.EnumExamStatus.Started)
             {
-                <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"appear/{examId}")) Text="Start"></RadzenButton>
+                <div class="col-md-12 p-1 m-3 text-center">
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"appear/{examId}")) Text="Start"></RadzenButton>
+                </div>
             }
         </AuthorizeView>
     </div>
