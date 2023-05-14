@@ -59,7 +59,16 @@ else
                                     {
                                         @foreach (var item in options)
                                         {
-                                            <li> <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText> </li>
+                                            <li> 
+                                                @if (item.IsCorrect)
+                                                {
+                                                    <RadzenBadge Text="@item.OptText" BadgeStyle="BadgeStyle.Success"></RadzenBadge>
+                                                }
+                                                else
+                                                {
+                                                    <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText>
+                                                }
+                                            </li>
                                         }
                                     }
                                 </ol>

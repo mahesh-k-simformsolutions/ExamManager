@@ -109,7 +109,6 @@ else
         }
         catch (Exception ex)
         {
-            throw;
         }
     }
 
@@ -124,18 +123,24 @@ else
 
     private async Task Save()
     {
-        await ExamService.SaveExam(exam);
-        List<ExamToStudent> examToStudents = new List<ExamToStudent>();
-        foreach (var sId in selectedStudents)
+        try
         {
-            examToStudents.Add(new ExamToStudent()
-                {
-                    ExamId = this.exam.Id,
-                    StudentId = sId
-                });
+            await ExamService.SaveExam(exam);
+            List<ExamToStudent> examToStudents = new List<ExamToStudent>();
+            foreach (var sId in selectedStudents)
+            {
+                examToStudents.Add(new ExamToStudent()
+                    {
+                        ExamId = this.exam.Id,
+                        StudentId = sId
+                    });
+            }
+            await ExamService.AssignExamToStudent(examToStudents);
+            UriHelper.NavigateTo("/exams");
         }
-        await ExamService.AssignExamToStudent(examToStudents);
-        UriHelper.NavigateTo("/exams");
+        catch (Exception)
+        {
+        }
     }
 
     public async Task<string> GetCurrentUserId()

@@ -30,7 +30,8 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                return await _context.Questions.Include(q => q.Options).ToListAsync();
+                var examToQuestions = _context.ExamToQuestions.Where(x => x.ExamId == examId).Select(x => x.QuestionId);
+                return await _context.Questions.Include(q => q.Options).Where(x => examToQuestions.Contains(x.Id)).ToListAsync();
             }
             catch (Exception ex)
             {
