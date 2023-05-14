@@ -214,37 +214,6 @@ namespace ExamManagementSystem.Migrations
                     b.ToTable("Questions");
                 });
 
-            modelBuilder.Entity("ExamManagementSystem.Data.ScoreCard", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("CorrectAnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<float>("ObtainedMarks")
-                        .HasColumnType("real");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SelectedAnswerId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CorrectAnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.HasIndex("SelectedAnswerId");
-
-                    b.ToTable("ScoreCards");
-                });
-
             modelBuilder.Entity("ExamManagementSystem.Data.User", b =>
                 {
                     b.Property<string>("Id")
@@ -552,33 +521,6 @@ namespace ExamManagementSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("Question");
-                });
-
-            modelBuilder.Entity("ExamManagementSystem.Data.ScoreCard", b =>
-                {
-                    b.HasOne("ExamManagementSystem.Data.Answer", "CorrectAnswer")
-                        .WithMany()
-                        .HasForeignKey("CorrectAnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ExamManagementSystem.Data.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ExamManagementSystem.Data.Answer", "SelectedAnswer")
-                        .WithMany()
-                        .HasForeignKey("SelectedAnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CorrectAnswer");
-
-                    b.Navigation("Question");
-
-                    b.Navigation("SelectedAnswer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

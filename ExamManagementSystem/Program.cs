@@ -1,3 +1,5 @@
+using DinkToPdf.Contracts;
+using DinkToPdf;
 using ExamManagementSystem.Areas.Identity;
 using ExamManagementSystem.Background;
 using ExamManagementSystem.Data;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, opt => { opt.EnableRetryOnFailure(); }), ServiceLifetime.Singleton);
+
+builder.Logging.AddFile($"Logs/{Assembly.GetExecutingAssembly().GetName().Name}.log");
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -42,7 +47,7 @@ builder.Services.AddScoped<CommonService>();
 
 builder.Services.AddSingleton<IHostedService, UpdateExamStatusToStarted>();
 builder.Services.AddSingleton<IHostedService, UpdateExamStatusToCompleted>();
-
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

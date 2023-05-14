@@ -18,7 +18,6 @@ namespace ExamManagementSystem.Data.DbContext
         public DbSet<ExamResult> ExamResults { get; set; }
         public DbSet<ExamToStudent> ExamToStudents { get; set; }
         public DbSet<ExamToQuestion> ExamToQuestions { get; set; }
-        public DbSet<ScoreCard> ScoreCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -26,9 +25,6 @@ namespace ExamManagementSystem.Data.DbContext
 
             builder.Entity<ExamToStudent>().HasOne(x => x.Student).WithMany().OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Answer>().HasOne(x => x.Option).WithMany().OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<ScoreCard>().HasOne(x => x.Question).WithMany().OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<ScoreCard>().HasOne(x => x.CorrectAnswer).WithMany().OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<ScoreCard>().HasOne(x => x.SelectedAnswer).WithMany().OnDelete(DeleteBehavior.Restrict);
             builder.Entity<ExamToQuestion>()
                 .HasIndex(x => new { x.QuestionId, x.ExamId })
                 .IsUnique();
