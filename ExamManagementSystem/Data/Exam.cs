@@ -8,7 +8,7 @@ namespace ExamManagementSystem.Data
         /// <summary>
         /// Duration in minutes
         /// </summary>
-        public string Duration { get { return (EndTime.TimeOfDay - StartTime.TimeOfDay).TotalMinutes.ToString(); } }
+        public string Duration => (EndTime.TimeOfDay - StartTime.TimeOfDay).TotalMinutes.ToString();
 
         /// <summary>
         /// 00:00:00 to 23:59:59

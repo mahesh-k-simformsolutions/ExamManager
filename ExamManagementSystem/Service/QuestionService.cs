@@ -30,7 +30,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var examToQuestions = _context.ExamToQuestions.Where(x => x.ExamId == examId).Select(x => x.QuestionId);
+                IQueryable<int> examToQuestions = _context.ExamToQuestions.Where(x => x.ExamId == examId).Select(x => x.QuestionId);
                 return await _context.Questions.Include(q => q.Options).Where(x => examToQuestions.Contains(x.Id)).ToListAsync();
             }
             catch (Exception ex)
@@ -44,7 +44,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var examToQuestions = _context.ExamToQuestions.Where(x => x.QuestionId == qId);
+                IQueryable<ExamToQuestion> examToQuestions = _context.ExamToQuestions.Where(x => x.QuestionId == qId);
                 return await examToQuestions.ToListAsync();
             }
             catch (Exception ex)
@@ -58,10 +58,10 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var questions = _context.Questions.Include(x => x.Options);
-                foreach (var item in questions)
+                Microsoft.EntityFrameworkCore.Query.IIncludableQueryable<Question, ICollection<Option>> questions = _context.Questions.Include(x => x.Options);
+                foreach (Question item in questions)
                 {
-                    var examToQuestions = _context.ExamToQuestions.Where(x => x.QuestionId == item.Id).Select(x => x.Exam);
+                    IQueryable<Exam> examToQuestions = _context.ExamToQuestions.Where(x => x.QuestionId == item.Id).Select(x => x.Exam);
                     item.Exams.AddRange(examToQuestions);
                 }
                 return await questions.ToListAsync();
@@ -78,14 +78,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                if (q.Id > 0)
-                {
-                    _context.Questions.Update(q);
-                }
-                else
-                {
-                    _context.Questions.Add(q);
-                }
+                _ = q.Id > 0 ? _context.Questions.Update(q) : _context.Questions.Add(q);
                 return _context.SaveChanges();
 
             }
@@ -101,16 +94,9 @@ namespace ExamManagementSystem.Service
             try
             {
 
-                foreach (var examToQuestion in examToQuestions)
+                foreach (ExamToQuestion examToQuestion in examToQuestions)
                 {
-                    if (examToQuestion.Id > 0)
-                    {
-                        _context.ExamToQuestions.Update(examToQuestion);
-                    }
-                    else
-                    {
-                        _context.ExamToQuestions.Add(examToQuestion);
-                    }
+                    _ = examToQuestion.Id > 0 ? _context.ExamToQuestions.Update(examToQuestion) : _context.ExamToQuestions.Add(examToQuestion);
                 }
                 return _context.SaveChanges();
             }
@@ -125,10 +111,10 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var question = await _context.Questions.FirstOrDefaultAsync(x => x.Id == id);
+                Question? question = await _context.Questions.FirstOrDefaultAsync(x => x.Id == id);
                 if (question != null)
                 {
-                    _context.Questions.Remove(question);
+                    _ = _context.Questions.Remove(question);
                     return await _context.SaveChangesAsync();
                 }
                 return 0;

@@ -23,9 +23,9 @@ namespace ExamManagementSystem.Data.DbContext
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<ExamToStudent>().HasOne(x => x.Student).WithMany().OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Answer>().HasOne(x => x.Option).WithMany().OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<ExamToQuestion>()
+            _ = builder.Entity<ExamToStudent>().HasOne(x => x.Student).WithMany().OnDelete(DeleteBehavior.Restrict);
+            _ = builder.Entity<Answer>().HasOne(x => x.Option).WithMany().OnDelete(DeleteBehavior.Restrict);
+            _ = builder.Entity<ExamToQuestion>()
                 .HasIndex(x => new { x.QuestionId, x.ExamId })
                 .IsUnique();
         }

@@ -25,9 +25,9 @@ namespace ExamManagementSystem.Data
 
         private int GetCorrectOptionIndex()
         {
-            if(Options != null && Options.Count > 0)
+            if (Options != null && Options.Count > 0)
             {
-                var correct = Options.FirstOrDefault(x => x.IsCorrect);
+                Option? correct = Options.FirstOrDefault(x => x.IsCorrect);
                 return Options.ToList().IndexOf(correct);
             }
             return -1;

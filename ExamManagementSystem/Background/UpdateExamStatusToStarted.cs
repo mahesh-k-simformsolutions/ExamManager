@@ -25,15 +25,15 @@ namespace ExamManagementSystem.Background
 
         private void DoWork(object? state)
         {
-            using SqlConnection connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            using SqlConnection connection = new(_config.GetConnectionString("DefaultConnection"));
             try
             {
                 connection.Open();
-                var examList = new List<Exam>();
+                List<Exam> examList = new();
                 string query = $"SELECT Id,StartTime FROM Exams WHERE ExamStatus=@examStatus";
-                using var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@examStatus", (int)EnumExamStatus.NotStarted);
-                using var reader = command.ExecuteReader();
+                using SqlCommand command = new(query, connection);
+                _ = command.Parameters.AddWithValue("@examStatus", (int)EnumExamStatus.NotStarted);
+                using SqlDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     examList.Add(new Exam
@@ -43,16 +43,16 @@ namespace ExamManagementSystem.Background
                     });
                 }
 
-                foreach (var exam in examList)
+                foreach (Exam exam in examList)
                 {
                     TimeSpan delay = DateTime.Now - exam.StartTime;
                     if (delay.TotalMilliseconds > 0)
                     {
-                        var updateQuery = "UPDATE Exams SET ExamStatus = @examStatus WHERE Id = @id";
-                        using var updateCommand = new SqlCommand(updateQuery, connection);
-                        updateCommand.Parameters.AddWithValue("@examStatus", (int)EnumExamStatus.Started);
-                        updateCommand.Parameters.AddWithValue("@id", exam.Id);
-                        updateCommand.ExecuteNonQuery();
+                        string updateQuery = "UPDATE Exams SET ExamStatus = @examStatus WHERE Id = @id";
+                        using SqlCommand updateCommand = new(updateQuery, connection);
+                        _ = updateCommand.Parameters.AddWithValue("@examStatus", (int)EnumExamStatus.Started);
+                        _ = updateCommand.Parameters.AddWithValue("@id", exam.Id);
+                        _ = updateCommand.ExecuteNonQuery();
                         _logger.LogInformation($"Exam {exam.Id} updated to {exam.ExamStatus} on {DateTime.Now}");
                     }
                 }

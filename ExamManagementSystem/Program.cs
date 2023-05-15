@@ -1,5 +1,5 @@
-using DinkToPdf.Contracts;
 using DinkToPdf;
+using DinkToPdf.Contracts;
 using ExamManagementSystem.Areas.Identity;
 using ExamManagementSystem.Background;
 using ExamManagementSystem.Data;
@@ -13,10 +13,10 @@ using Microsoft.EntityFrameworkCore;
 using Radzen;
 using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -48,18 +48,18 @@ builder.Services.AddScoped<CommonService>();
 builder.Services.AddSingleton<IHostedService, UpdateExamStatusToStarted>();
 builder.Services.AddSingleton<IHostedService, UpdateExamStatusToCompleted>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseMigrationsEndPoint();
+    _ = app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseExceptionHandler("/Error");
+    _ = app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    _ = app.UseHsts();
 }
 
 app.UseHttpsRedirection();

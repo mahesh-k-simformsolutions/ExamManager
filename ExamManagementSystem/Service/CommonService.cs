@@ -25,7 +25,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var students = await _userManager.GetUsersInRoleAsync(EnumUserRole.Student.ToString());
+                IList<User> students = await _userManager.GetUsersInRoleAsync(EnumUserRole.Student.ToString());
                 return students.OrderBy(x => x.Name).ToList();
             }
             catch (Exception ex)
@@ -39,7 +39,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                var teachers = await _userManager.GetUsersInRoleAsync(EnumUserRole.Teacher.ToString());
+                IList<User> teachers = await _userManager.GetUsersInRoleAsync(EnumUserRole.Teacher.ToString());
                 return teachers.ToList();
 
             }

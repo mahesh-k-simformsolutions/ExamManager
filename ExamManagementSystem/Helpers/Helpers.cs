@@ -10,7 +10,7 @@ namespace ExamManagementSystem.Helpers
         public static string GenerateCode(int length = 6)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
+            Random random = new();
 
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
@@ -18,9 +18,9 @@ namespace ExamManagementSystem.Helpers
 
         public static async Task CreateAdmin(this WebApplication app)
         {
-            using var scope = app.Services.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            using IServiceScope scope = app.Services.CreateScope();
+            UserManager<User> userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             string userName = "mnkantariya173@gmail.com";
             string password = "Gb3QC2YS@J7kg";
@@ -30,10 +30,10 @@ namespace ExamManagementSystem.Helpers
             bool roleExists = await roleManager.RoleExistsAsync(roleName);
             if (!roleExists)
             {
-                await roleManager.CreateAsync(new IdentityRole(roleName));
+                _ = await roleManager.CreateAsync(new IdentityRole(roleName));
             }
 
-            var user = await userManager.FindByNameAsync(userName);
+            User? user = await userManager.FindByNameAsync(userName);
             if (user == null)
             {
                 user = new User
@@ -42,10 +42,10 @@ namespace ExamManagementSystem.Helpers
                     UserName = userName,
                     Email = userName
                 };
-                var result = await userManager.CreateAsync(user, password);
+                IdentityResult result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, roleName);
+                    _ = await userManager.AddToRoleAsync(user, roleName);
                 }
             }
         }
@@ -73,17 +73,9 @@ namespace ExamManagementSystem.Helpers
             {
                 return "Today";
             }
-            else if (date.Date == tomorrow)
-            {
-                return "Tomorrow";
-            }
-            else if (date.Date == yesterday)
-            {
-                return "Yesterday";
-            }
             else
             {
-                return date.ToString("D");
+                return date.Date == tomorrow ? "Tomorrow" : date.Date == yesterday ? "Yesterday" : date.ToString("D");
             }
         }
     }
