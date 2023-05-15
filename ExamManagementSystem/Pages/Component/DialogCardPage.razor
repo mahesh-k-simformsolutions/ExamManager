@@ -4,12 +4,12 @@
 @using ExamManagementSystem.Helpers
 @using ExamManagementSystem.Pages.Component
 @using Microsoft.EntityFrameworkCore
+
 @inject ExamManagementSystem.Service.ExamService ExamService
 @inject NavigationManager UriHelper
+@inject Radzen.DialogService dialogService
 
 @attribute [Authorize(Roles = "Student")]
-
-@inject Radzen.DialogService dialogService
 
 <RadzenStack Gap="1rem">
     <RadzenRow>
@@ -48,7 +48,7 @@
 
     Exam exam;
     IEnumerable<Question> questions;
-    IEnumerable<User> students;
+    //IEnumerable<User> students;
 
     protected override async Task OnInitializedAsync()
     {

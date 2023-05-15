@@ -168,7 +168,7 @@
 
         if (orders.Contains(order))
         {
-            QuestionService.DeleteQ(order.Id);
+            await QuestionService.DeleteQ(order.Id);
 
             await ordersGrid.Reload();
         }

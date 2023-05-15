@@ -5,6 +5,7 @@
 
 @using ExamManagementSystem.Data
 @using ExamManagementSystem.Enums
+@using ExamManagementSystem.Helpers;
 @using ExamManagementSystem.Service
 @using System.Security.Principal
 @using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,7 @@
 @inject ExamService ExamService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
+@inject ILogger Logger
 
 @attribute [Authorize(Roles = "Teacher,Admin")]
 @if (exam == null)
@@ -83,7 +85,7 @@ else
     [Parameter]
     public int examId { get; set; }
 
-    public string title { get; set; }
+    public string title { get { return examId == 0 ? "Conduct": "Edit" ; } }
 
     Exam exam;
     List<User> Students = new List<User>();
@@ -94,13 +96,11 @@ else
         {
             if (examId == 0)
             {
-                title = "Conduct";
                 this.exam = new Exam();
-                this.exam.TeacherId = await GetCurrentUserId();
+                this.exam.TeacherId = await AuthProvider.GetUserId();
             }
             else
             {
-                title = "Edit";
                 this.exam = await ExamService.GetExamById(examId);
                 var studentsOfExam = await ExamService.GetExamsToStudentByExam(examId);
                 selectedStudents = studentsOfExam.Select(x => x.StudentId).ToList();
@@ -109,6 +109,7 @@ else
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex.Message);
         }
     }
 
@@ -138,16 +139,9 @@ else
             await ExamService.AssignExamToStudent(examToStudents);
             UriHelper.NavigateTo("/exams");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogError(ex.Message);
         }
-    }
-
-    public async Task<string> GetCurrentUserId()
-    {
-        var authstate = await AuthProvider.GetAuthenticationStateAsync();
-        var user = authstate.User;
-        var id = user.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier.ToString()).Select(x => x.Value).FirstOrDefault();
-        return id;
     }
 }

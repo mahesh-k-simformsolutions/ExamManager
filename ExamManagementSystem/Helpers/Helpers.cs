@@ -1,5 +1,6 @@
 ﻿using ExamManagementSystem.Data;
 using ExamManagementSystem.Enums;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
@@ -56,11 +57,19 @@ namespace ExamManagementSystem.Helpers
         {
             return claimsPrincipal!.FindFirst(ClaimTypes.NameIdentifier.ToString())!.Value;
         }
+
+        public static async Task<string> GetUserId(this AuthenticationStateProvider authenticationStateProvider)
+        {
+            var authstate = await authenticationStateProvider.GetAuthenticationStateAsync();
+            return authstate.User.GetUserId();
+        }
+
         public static bool IsAdminOrTeacher(this ClaimsPrincipal claimsPrincipal)
         {
             return claimsPrincipal.IsInRole(EnumUserRole.Admin.ToString()) || claimsPrincipal.IsInRole(EnumUserRole.Teacher.ToString());
         }
     }
+
     public static class DateHelper
     {
         public static string ConvertToString(this DateTime date)

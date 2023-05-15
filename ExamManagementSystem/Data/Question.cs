@@ -28,7 +28,7 @@ namespace ExamManagementSystem.Data
             if (Options != null && Options.Count > 0)
             {
                 Option? correct = Options.FirstOrDefault(x => x.IsCorrect);
-                return Options.ToList().IndexOf(correct);
+                return correct != null ? Options.ToList().IndexOf(correct) : -1;
             }
             return -1;
         }

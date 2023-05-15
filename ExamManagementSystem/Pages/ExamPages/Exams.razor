@@ -79,14 +79,13 @@ else
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Exam" Title="Action">
                 <Template Context="data">
-                        @if (IsEditable(data))
-                        {
+                    @if (IsEditable(data))
+                    {
                         <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editexam/" + @data.Id))
                               Text="Edit" Size="ButtonSize.ExtraSmall"></RadzenButton>
-                            <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
-                                Text="Delete" Size="ButtonSize.ExtraSmall"></RadzenButton>
-
-                        }
+                        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
+                              Text="Delete" Size="ButtonSize.ExtraSmall"></RadzenButton>
+                    }
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -115,7 +114,7 @@ else
     }
     private async Task Refresh()
     {
-        exams = await ExamService.GetExams();   
+        exams = await ExamService.GetExams();
     }
 
 }

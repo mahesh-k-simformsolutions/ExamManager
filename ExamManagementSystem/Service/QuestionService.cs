@@ -18,7 +18,8 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                return await _context.Questions.Include(x => x.Options).FirstOrDefaultAsync(x => x.Id == id);
+                return await _context.Questions.Include(x => x.Options).FirstOrDefaultAsync(x => x.Id == id)
+                    ?? throw new Exception("Question not found");
             }
             catch (Exception ex)
             {
