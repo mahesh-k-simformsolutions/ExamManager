@@ -5,6 +5,8 @@ using ExamManagementSystem.Background;
 using ExamManagementSystem.Data;
 using ExamManagementSystem.Data.DbContext;
 using ExamManagementSystem.Helpers;
+using ExamManagementSystem.Hubs;
+using ExamManagementSystem.Hubs.Connection;
 using ExamManagementSystem.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -45,9 +47,14 @@ builder.Services.AddScoped<ExamService>();
 builder.Services.AddScoped<QuestionService>();
 builder.Services.AddScoped<CommonService>();
 
-builder.Services.AddSingleton<IHostedService, UpdateExamStatusToStarted>();
-builder.Services.AddSingleton<IHostedService, UpdateExamStatusToCompleted>();
+builder.Services.AddHostedService<UpdateExamStatusToStarted>();
+builder.Services.AddHostedService<UpdateExamStatusToCompleted>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationHub>();
+builder.Services.AddScoped<SignalRBlazorHubConnection>();
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -74,6 +81,11 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHub<NotificationHub>("/notificationHub");
+});
 
 await app.CreateAdmin();
 

@@ -3,6 +3,8 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 [assembly: FunctionsStartup(typeof(UpcomingExams.Startup))]
 namespace UpcomingExams
@@ -15,6 +17,11 @@ namespace UpcomingExams
             string connectionString = configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApplicationDbContext>(
               options => SqlServerDbContextOptionsExtensions.UseSqlServer(options, connectionString));
+
+            builder.Services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddFile($"Logs/{Assembly.GetExecutingAssembly().GetName().Name}.log");
+            });
         }
         private IConfiguration BuildConfiguration(string applicationRootPath)
         {

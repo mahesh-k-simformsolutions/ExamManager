@@ -2,6 +2,8 @@
 using DinkToPdf.Contracts;
 using ExamManagementSystem.Data;
 using ExamManagementSystem.Data.DbContext;
+using ExamManagementSystem.Hubs;
+using ExamManagementSystem.Pages.ExamPages;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -16,12 +18,14 @@ namespace ExamManagementSystem.Service
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IConverter _converter;
         private readonly ILogger<ExamService> _logger;
-        public ExamService(ApplicationDbContext context, IHttpContextAccessor contextAccessor, IConverter converter, ILogger<ExamService> logger)
+        private readonly NotificationHub _hub;
+        public ExamService(ApplicationDbContext context, IHttpContextAccessor contextAccessor, IConverter converter, ILogger<ExamService> logger, NotificationHub hub)
         {
             _context = context;
             _contextAccessor = contextAccessor;
             _converter = converter;
             _logger = logger;
+            _hub = hub;
         }
 
         public async Task<Exam> GetExamById(int id)
@@ -139,7 +143,21 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                _ = exam.Id > 0 ? _context.Exams.Update(exam) : _context.Exams.Add(exam);
+                if (exam.Id > 0)
+                {
+                    _context.Exams.Update(exam);
+
+                    // Notify students if exam status is changed
+                    if (exam.ExamStatus != Enums.EnumExamStatus.NotStarted && _context.Entry(exam).Properties.Any(x => x.IsModified && x.Metadata.Name == nameof(exam.ExamStatus)))
+                    {
+                        var studentsToNotify = await _context.ExamToStudents.Include(x => x.Student).Where(x => x.ExamId == exam.Id).Select(x => x.Student.Email).ToListAsync();
+                        studentsToNotify?.ForEach(async student => { await _hub.NotifyExamStatus(student, exam); });
+                    }
+                }
+                else
+                {
+                    _context.Exams.Add(exam);
+                }
                 return await _context.SaveChangesAsync();
 
             }
@@ -160,15 +178,19 @@ namespace ExamManagementSystem.Service
                     int examId = examToStudent.FirstOrDefault()!.ExamId;
                     IEnumerable<string> inputStudentIds = examToStudent.Select(x => x.StudentId);
 
-                    IQueryable<ExamToStudent> existing = _context.ExamToStudents.Where(x => x.ExamId == examId);
-                    IQueryable<string> existingStudentIds = _context.ExamToStudents.Where(x => x.ExamId == examId).Select(x => x.StudentId);
+                    List<ExamToStudent> existing = _context.ExamToStudents.Where(x => x.ExamId == examId).ToList();
+                    List<string> existingStudentIds = _context.ExamToStudents.Where(x => x.ExamId == examId).Select(x => x.StudentId).ToList();
 
-                    IEnumerable<string> newStudents = inputStudentIds.Except(existingStudentIds);
+                    IEnumerable<string> newStudents = inputStudentIds.Except(existingStudentIds).ToList();
                     IEnumerable<string> deleting = existingStudentIds.AsEnumerable().Except(inputStudentIds);
 
                     foreach (ExamToStudent? item in examToStudent.Where(x => newStudents.Contains(x.StudentId)))
                     {
                         _ = _context.ExamToStudents.Add(item);
+
+                        // Notify new students
+                        var studentsToNotify = _context.Users.Where(x => x.Id == item.StudentId).Select(x => x.Email).ToList();
+                        studentsToNotify?.ForEach(async student => { await _hub.NotifyExamStatus(student, item.Exam); });
                     }
 
                     foreach (ExamToStudent? item in existing.Where(eTos => deleting.Contains(eTos.StudentId)))
