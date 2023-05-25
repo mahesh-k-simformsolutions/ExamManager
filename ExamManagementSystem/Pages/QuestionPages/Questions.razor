@@ -10,94 +10,99 @@
 
 @inject AuthenticationStateProvider AuthProvider
 @attribute [Authorize(Roles = "Teacher,Admin")]
-
-@if (questions == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
+    @if (ShowActionButtons)
 {
     <AuthorizeView Roles="Teacher,Admin">
         <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Add Question" Style="margin-bottom:15px;" Click="@(args => UriHelper.NavigateTo("createquestion"))" Size="ButtonSize.ExtraSmall"></RadzenButton>
     </AuthorizeView>
-
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-7">
-                <RadzenDataGrid ColumnWidth="200px" AllowColumnResize="true" AllowColumnReorder="true" AllowPaging="true" PageSize="8" AllowSorting="true" Data="@questions" TItem="Question" @bind-Value="@selectedQ">
-                    <Columns>
-                        <RadzenDataGridColumn Width="75%" TItem="Question" Title="Question">
-                            <Template Context="data">
-                                <RadzenText class="mb-0">@data.QuestionText</RadzenText>
-                            </Template>
-                        </RadzenDataGridColumn>
+}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-7">
+            <RadzenDataGrid @ref="questionsGrid" IsLoading=@(questions == null) ColumnWidth="200px" AllowColumnResize="true" AllowColumnReorder="true" AllowPaging="true" PageSize="8" AllowSorting="true" Data="@questions" TItem="Question" @bind-Value="@selectedQ">
+                <Columns>
+                    <RadzenDataGridColumn Width="75%" TItem="Question" Title="Question">
+                        <Template Context="data">
+                            <RadzenText Text="@data.QuestionText" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    @if (ShowActionButtons)
+                    {
                         <RadzenDataGridColumn Width="25%" TItem="Question" Title="Action">
                             <Template Context="data">
                                 <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editquestion/" + @data.Id))
-                                          Text="Edit" Size="ButtonSize.ExtraSmall"></RadzenButton>
+                                          Text="Edit" Size="ButtonSize.ExtraSmall" />
                                 <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteQ(@data.Id))
-                                          Text="Delete" Size="ButtonSize.ExtraSmall"></RadzenButton>
+                                          Text="Delete" Size="ButtonSize.ExtraSmall" />
                             </Template>
                         </RadzenDataGridColumn>
-                    </Columns>
-                </RadzenDataGrid>
-            </div>
-            @if (questions.Count > 0)
-            {
-                <div class="col-md-5">
-                    <RadzenCard Style="margin-bottom:20px">
-                        <b>@selectedQ.FirstOrDefault()?.QuestionText</b>
-                    </RadzenCard>
-                    <RadzenTabs>
-                        <Tabs>
-                            <RadzenTabsItem Text="Options">
-                                <ol>
-                                    @{
-                                        var options = selectedQ?.FirstOrDefault()?.Options;
-                                    }
-                                    @if (selectedQ?.Count > 0 && options != null)
-                                    {
-                                        @foreach (var item in options)
-                                        {
-                                            <li> 
-                                                @if (item.IsCorrect)
-                                                {
-                                                    <RadzenBadge Text="@item.OptText" BadgeStyle="BadgeStyle.Success"></RadzenBadge>
-                                                }
-                                                else
-                                                {
-                                                    <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText>
-                                                }
-                                            </li>
-                                        }
-                                    }
-                                </ol>
-                            </RadzenTabsItem>
-                            <RadzenTabsItem Text="Details">
-                                <RadzenDataGrid Data="@selectedQ" TItem="Question">
-                                    <Columns>
-                                        <RadzenDataGridColumn TItem="Question" Title="Mark(s)">
-                                            <Template Context="data">
-                                                <RadzenText class="mb-0">@data.Marks</RadzenText>
-                                            </Template>
-                                        </RadzenDataGridColumn>
-                                        <RadzenDataGridColumn TItem="Question" Title="Appeared in Exams">
-                                            <Template Context="data">
-                                                <RadzenText class="mb-0">@data.Exams.Count</RadzenText>
-                                            </Template>
-                                        </RadzenDataGridColumn>
-                                    </Columns>
-                                </RadzenDataGrid>
-                            </RadzenTabsItem>
-                        </Tabs>
-                    </RadzenTabs>
-                </div>
-            }
+                    }
+                </Columns>
+            </RadzenDataGrid>
         </div>
+        @if (questions.Count > 0)
+        {
+            <div class="col-md-5">
+                @* <RadzenCard Style="margin-bottom:20px">
+            <b>@selectedQ.FirstOrDefault()?.QuestionText</b>
+            </RadzenCard>*@
+                <RadzenTabs>
+                    <Tabs>
+                        <RadzenTabsItem Text="Options">
+                            <ol>
+                                @{
+                                    var options = selectedQ?.FirstOrDefault()?.Options;
+                                }
+                                @if (selectedQ?.Count > 0 && options != null)
+                                {
+                                    @foreach (var item in options)
+                                    {
+                                        <li>
+                                            @if (item.IsCorrect)
+                                            {
+                                                <RadzenBadge Text="@item.OptText" BadgeStyle="BadgeStyle.Success"></RadzenBadge>
+                                            }
+                                            else
+                                            {
+                                                <RadzenText Style="margin-bottom:5px"> <b>@item.OptText</b></RadzenText>
+                                            }
+                                        </li>
+                                    }
+                                }
+                            </ol>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Details">
+                            <RadzenDataGrid Data="@selectedQ" TItem="Question">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="Question" Title="Mark(s)">
+                                        <Template Context="data">
+                                            <RadzenText class="mb-0">@data.Marks</RadzenText>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="Question" Title="Appeared in Exams">
+                                        <Template Context="data">
+                                            <RadzenText class="mb-0">@data.Exams.Count</RadzenText>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </RadzenTabsItem>
+                    </Tabs>
+                </RadzenTabs>
+            </div>
+        }
     </div>
-}
+</div>
 
 @code {
+    [Parameter]
+    public ICollection<Question>? Data { get; set; }
+
+    [Parameter]
+    public bool ShowActionButtons { get; set; } = true;
+
+    RadzenDataGrid<Question>? questionsGrid;
+
     private List<Question> questions = new List<Question>();
     private IList<Question> selectedQ = new List<Question>();
     private ClaimsPrincipal? User;
@@ -115,7 +120,7 @@ else
 
     private async Task Refresh()
     {
-        questions = await QService.GetQuestions();
+        questions = Data != null ? Data.ToList() : await QService.GetQuestions();
         selectedQ = new List<Question>() { questions.FirstOrDefault() };
     }
 }

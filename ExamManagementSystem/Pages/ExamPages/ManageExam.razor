@@ -9,6 +9,7 @@
 @using ExamManagementSystem.Service
 @using System.Security.Principal
 @using Microsoft.AspNetCore.Identity;
+@using ExamManagementSystem.Pages.Component
 
 @inject CommonService Service
 @inject ExamService ExamService
@@ -23,73 +24,86 @@
 }
 else
 {
-    <div Class="rz-p-0 rz-md-12">
-        <RadzenStack Class="rz-p-sm-12">
-            <RadzenStack Orientation=Orientation.Horizontal>
-                <RadzenFormField Text="Exam Name" Style="width:85%">
-                    <ChildContent>
-                        <RadzenTextBox Name="ExamName" Style="width: 100%;" @bind-Value=exam.ExamName />
-                    </ChildContent>
-                </RadzenFormField>
-                <RadzenFormField Text="Exam Code" Style="width:15%">
-                    <ChildContent>
-                        <RadzenTextBox Disabled="true" Style="width: 100%;" Name="ExamCode" Value=@exam.ExamCode />
-                    </ChildContent>
-                </RadzenFormField>
-            </RadzenStack>
-            <RadzenStack Orientation=Orientation.Horizontal>
-                <RadzenFormField Text="Start Time" Style="width:25%">
-                    <ChildContent>
-                        <RadzenDatePicker ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="StartTime" @bind-Value=exam.StartTime />
-                    </ChildContent>
-                </RadzenFormField>
-                <RadzenFormField Text="End Time" Style="width:25%">
-                    <ChildContent>
-                        <RadzenDatePicker Min="@exam.StartTime" ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="EndTime" @bind-Value=exam.EndTime />
-                    </ChildContent>
-                </RadzenFormField>
-                <RadzenFormField Text="Duration" Style="width:15%">
-                    <ChildContent>
-                        <RadzenTextBox Disabled="true" Style="width: 100%;" Name="Duration" Value=@(exam.Duration + " Mins") />
-                    </ChildContent>
-                </RadzenFormField>
-                <RadzenFormField Text="Date" Style="width:35%">
-                    <ChildContent>
-                        <RadzenDatePicker Min="DateTime.Now.AddDays(-1)" ShowTime="false" HourFormat="12" Change="@(ar => OnDateTimeChanged(ar))" DateFormat="dd/MM/yyyy" Style="width: 100%;" Name="Date" @bind-Value=exam.Date />
-                    </ChildContent>
-                </RadzenFormField>
-            </RadzenStack>
-            <RadzenStack Orientation=Orientation.Horizontal>
-                <RadzenDropDown @bind-Value=@selectedStudents Data=@Students TextProperty="Name" ValueProperty="Id"
-                            Multiple=true AllowClear=true Placeholder="Select student" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            SelectAllText="Select all students" SelectedItemsText="selected" Style="width: 75%;" />
-                <RadzenDropDown Data="@(Enum.GetValues(typeof(EnumExamStatus)).Cast<Enum>())" @bind-Value=@exam.ExamStatus
-                            Disabled="@(exam.Id == 0)" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width: 25%;">
-                </RadzenDropDown>
+    if (IsEditable)
+    {
 
+        <div Class="rz-p-0 rz-md-12">
+            <RadzenStack Class="rz-p-sm-12">
+                <RadzenStack Orientation=Orientation.Horizontal>
+                    <RadzenFormField Text="Exam Name" Style="width:85%">
+                        <ChildContent>
+                            <RadzenTextBox Name="ExamName" Style="width: 100%;" @bind-Value=exam.ExamName />
+                        </ChildContent>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Exam Code" Style="width:15%">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="true" Style="width: 100%;" Name="ExamCode" Value=@exam.ExamCode />
+                        </ChildContent>
+                    </RadzenFormField>
+                </RadzenStack>
+                <RadzenStack Orientation=Orientation.Horizontal>
+                    <RadzenFormField Text="Start Time" Style="width:25%">
+                        <ChildContent>
+                            <RadzenDatePicker ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="StartTime" @bind-Value=exam.StartTime />
+                        </ChildContent>
+                    </RadzenFormField>
+                    <RadzenFormField Text="End Time" Style="width:25%">
+                        <ChildContent>
+                            <RadzenDatePicker Min="@exam.StartTime" ShowTime="true" TimeOnly="true" HourFormat="12" DateFormat="h:mm tt" Style="width: 100%;" Name="EndTime" @bind-Value=exam.EndTime />
+                        </ChildContent>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Duration" Style="width:15%">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="true" Style="width: 100%;" Name="Duration" Value=@(exam.Duration + " Mins") />
+                        </ChildContent>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Date" Style="width:35%">
+                        <ChildContent>
+                            <RadzenDatePicker Min="DateTime.Now.AddDays(-1)" ShowTime="false" HourFormat="12" Change="@(ar => OnDateTimeChanged(ar))" DateFormat="dd/MM/yyyy" Style="width: 100%;" Name="Date" @bind-Value=exam.Date />
+                        </ChildContent>
+                    </RadzenFormField>
+                </RadzenStack>
+                <RadzenStack Orientation=Orientation.Horizontal>
+                    <RadzenDropDown @bind-Value=@selectedStudents Data=@Students TextProperty="Name" ValueProperty="Id" Multiple=true AllowClear=true Placeholder="Select student"
+                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectAllText="Select all students" 
+                            SelectedItemsText="selected" Style="width: 75%;" Disabled="@(exam.Id > 0 && exam.ExamStatus != EnumExamStatus.NotStarted)" />
+                    <RadzenDropDown Data="@(Enum.GetValues(typeof(EnumExamStatus)).Cast<Enum>())" @bind-Value=@exam.ExamStatus Change="@(ar => OnExamStatusChanged(ar))"
+                            Disabled="@(exam.Id == 0)" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width: 25%;" />
+                </RadzenStack>
+                <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save" />
             </RadzenStack>
-            <RadzenButton ButtonType="ButtonType.Button" Click=@(args => Save()) Text="Save"></RadzenButton>
-        </RadzenStack>
-        @if (exam.Id > 0)
-        {
-            <RadzenStack>
-                <ManageExamToQuestion Exam="@exam"></ManageExamToQuestion>
-            </RadzenStack>
+            @if (exam.Id > 0)
+            {
+                <ManageExamToQuestion Exam="@exam" />
+            }
+        </div>
 
-        }
-    </div>
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12 border border-1 p-1 m-3 text-center">
+                    Exam is <ExamStatus Exam="@exam"></ExamStatus>, can't edit
+                </div>
+            </div>
+        </div>
+    }
 
 }
 @code {
 
     [Parameter]
     public int examId { get; set; }
+    public bool IsEditable { get; set; } = true;
 
-    public string title { get { return examId == 0 ? "Conduct": "Edit" ; } }
+    public string title { get { return examId == 0 ? "Conduct" : "Edit"; } }
 
     Exam exam;
     List<User> Students = new List<User>();
     List<string> selectedStudents = new List<string>();
+    List<string> originalSelectedStudents = new List<string>();
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -102,13 +116,24 @@ else
             else
             {
                 this.exam = await ExamService.GetExamById(examId);
+                this.IsEditable = exam.ExamStatus == EnumExamStatus.NotStarted;
                 var studentsOfExam = await ExamService.GetExamsToStudentByExam(examId);
                 selectedStudents = studentsOfExam.Select(x => x.StudentId).ToList();
+                selectedStudents = studentsOfExam.Select(x => x.StudentId).ToList();
+                originalSelectedStudents = studentsOfExam.Select(x => x.StudentId).ToList();
             }
             Students = await Service.LoadStudents();
         }
         catch (Exception ex)
         {
+        }
+    }
+
+    private void OnExamStatusChanged(object examStatus)
+    {
+        if (EnumExamStatus.NotStarted != (EnumExamStatus)examStatus)
+        {
+            selectedStudents = originalSelectedStudents;
         }
     }
 
@@ -132,6 +157,7 @@ else
                 examToStudents.Add(new ExamToStudent()
                     {
                         ExamId = this.exam.Id,
+                        Exam = exam,
                         StudentId = sId
                     });
             }

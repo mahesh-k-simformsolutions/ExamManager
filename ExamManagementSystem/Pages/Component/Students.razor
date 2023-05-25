@@ -1,0 +1,19 @@
+﻿@using ExamManagementSystem.Data;
+
+<RadzenDataGrid IsLoading="@(Data == null)" AllowPaging="true" AllowSorting="true" Data="@Data" TItem="User"
+                ColumnWidth="200px" PageSize="3">
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="User" Title="#" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Frozen=true>
+            <Template>
+                @(Data.IndexOf(context) + 1)
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="200px" TItem="User" Property="Name" Title="Name" />
+        <RadzenDataGridColumn Width="200px" TItem="User" Property="Email" Title="Email" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public List<User> Data { get; set; }
+}

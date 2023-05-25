@@ -5,45 +5,59 @@
 @using ExamManagementSystem.Pages.Component
 @using System.Security.Principal
 @using Microsoft.AspNetCore.Identity;
+@using ExamManagementSystem.Pages.QuestionPages;
 
 @inject ExamService ExamService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
 
-
 @attribute [Authorize]
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12 border border-1 p-1 m-3 text-center">
+        <div class="col-md-12 border border-1 p-2 text-center">
             <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
                 <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
                 <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
-                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle1">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
             </RadzenStack>
         </div>
-        <div class="col-md-12 border border-1 p-1 m-3 text-center">
-            <RadzenText TextStyle="TextStyle.DisplayH3">@Exam.ExamStatus</RadzenText>
+        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <RadzenText TextStyle="TextStyle.Body1"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
         </div>
         <AuthorizeView Roles="Teacher,Admin">
-            <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+            <div class="col-md-12 border border-1 p-2 mb-5 text-center">
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-                    <RadzenText>Examiner: @Exam.Teacher?.Name</RadzenText>
-                    <RadzenText>Students appearing for this exam: @Students.Count</RadzenText>
+                    <RadzenText>Examiner: <b>@Exam.Teacher?.Name</b></RadzenText>
+                    <RadzenText>Students appearing for this exam: <b>@Students.Count</b></RadzenText>
                 </RadzenStack>
             </div>
+
             @if (Exam.ExamStatus == Enums.EnumExamStatus.NotStarted)
             {
-                <div class="col-md-12 p-1 m-3 text-center">
+                <div class="col-md-12 p-2 mb-5 text-center">
                     <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"editexam/{examId}")) Text="Edit"></RadzenButton>
                 </div>
             }
+
+            <RadzenText TextStyle="TextStyle.DisplayH6" Text="Students" />
+            <div class="col-md-12 border border-1 p-2 mb-5">
+                <Students Data="Students.Select(x => x.Student).OrderBy(x=>x.Name).ToList()"></Students>
+            </div>
+
+            <RadzenText TextStyle="TextStyle.DisplayH6" Text="Questions" />
+            <div class="col-md-12 border border-1 p-2 mb-5">
+                @if (Exam.Questions != null)
+                {
+                    <Questions Data="Exam.Questions" ShowActionButtons="false"></Questions>
+                }
+            </div>
         </AuthorizeView>
         <AuthorizeView Roles="Student">
             @if (Exam.ExamStatus == Enums.EnumExamStatus.Started)
             {
-                <div class="col-md-12 p-1 m-3 text-center">
+                <div class="col-md-12 p-2 mb-5 text-center">
                     <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"appear/{examId}")) Text="Start"></RadzenButton>
                 </div>
             }

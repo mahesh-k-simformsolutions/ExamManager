@@ -7,6 +7,7 @@ namespace ExamManagementSystem.Data
         public Question()
         {
             Exams = new List<Exam>();
+            ExamToQuestions = new List<ExamToQuestion>();
             CorrectOptionIndex = GetCorrectOptionIndex();
         }
         public string? QuestionText { get; set; }
@@ -15,7 +16,19 @@ namespace ExamManagementSystem.Data
         [NotMapped]
         public int CorrectOptionIndex { get; set; }
 
-        public ICollection<Option> Options { get; set; }
+        private ICollection<Option> _options;
+        public ICollection<Option> Options
+        {
+            get
+            {
+                return _options;
+            }
+            set
+            {
+                this._options = value;
+                this.CorrectOptionIndex = GetCorrectOptionIndex();
+            }
+        }
 
         /// <summary>
         /// Exams in which this question is included
@@ -32,5 +45,7 @@ namespace ExamManagementSystem.Data
             }
             return -1;
         }
+
+        public ICollection<ExamToQuestion> ExamToQuestions { get; set; }
     }
 }

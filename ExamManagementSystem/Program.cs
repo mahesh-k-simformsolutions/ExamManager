@@ -5,15 +5,13 @@ using ExamManagementSystem.Background;
 using ExamManagementSystem.Data;
 using ExamManagementSystem.Data.DbContext;
 using ExamManagementSystem.Helpers;
-using ExamManagementSystem.Hubs;
-using ExamManagementSystem.Hubs.Connection;
 using ExamManagementSystem.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Radzen;
 using System.Reflection;
+using Hubs = ExamManagementSystem.Hubs;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +28,7 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddRazorPages();
+
 builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
 {
     o.DetailedErrors = builder.Environment.IsDevelopment();
@@ -38,22 +37,24 @@ builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
 builder.Services.AddScoped<IClaimsTransformation, ClaimsTransformation>();
 
-builder.Services.AddScoped<DialogService>();
-builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<TooltipService>();
-builder.Services.AddScoped<ContextMenuService>();
+builder.Services.AddScoped<Radzen.DialogService>();
+builder.Services.AddScoped<Radzen.NotificationService>();
+builder.Services.AddScoped<Radzen.TooltipService>();
+builder.Services.AddScoped<Radzen.ContextMenuService>();
 
 builder.Services.AddScoped<ExamService>();
 builder.Services.AddScoped<QuestionService>();
 builder.Services.AddScoped<CommonService>();
+builder.Services.AddScoped<ResultService>();
 
 builder.Services.AddHostedService<UpdateExamStatusToStarted>();
 builder.Services.AddHostedService<UpdateExamStatusToCompleted>();
+
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<NotificationHub>();
-builder.Services.AddScoped<SignalRBlazorHubConnection>();
+builder.Services.AddSingleton<Hubs.NotificationHub>();
+builder.Services.AddScoped<Hubs.Connection.SignalRBlazorHubConnection>();
 
 WebApplication app = builder.Build();
 
@@ -84,7 +85,7 @@ app.MapFallbackToPage("/_Host");
 
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapHub<NotificationHub>("/notificationHub");
+    endpoints.MapHub<Hubs.NotificationHub>("/notificationHub");
 });
 
 await app.CreateAdmin();

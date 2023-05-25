@@ -20,13 +20,14 @@ namespace ExamManagementSystem.Helpers
             string userId = principal.GetUserId();
             if (userId != null)
             {
-                User user = null;// await _userManager.FindByIdAsync(userId);
+                User user = await _userManager.FindByIdAsync(userId);
                 if (user != null)
                 {
                     System.Collections.Generic.IList<string> role = await _userManager.GetRolesAsync(user);
                     if (!principal.HasClaim(claim => claim.Type == newIdentity.RoleClaimType) && role.Count > 0)
                     {
                         newIdentity.AddClaim(new Claim(newIdentity.RoleClaimType, role[0]));
+                       // newIdentity.AddClaim(new Claim(newIdentity, role[0]));
                     }
                 }
             }

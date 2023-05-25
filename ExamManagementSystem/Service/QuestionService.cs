@@ -31,8 +31,7 @@ namespace ExamManagementSystem.Service
         {
             try
             {
-                IQueryable<int> examToQuestions = _context.ExamToQuestions.Where(x => x.ExamId == examId).Select(x => x.QuestionId);
-                return await _context.Questions.Include(q => q.Options).Where(x => examToQuestions.Contains(x.Id)).ToListAsync();
+                return await _context.ExamToQuestions.Include(x => x.Question).ThenInclude(x => x.Options).Where(x => x.ExamId == examId).Select(x => x.Question).ToListAsync();
             }
             catch (Exception ex)
             {

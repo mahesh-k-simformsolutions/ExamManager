@@ -9,14 +9,10 @@ namespace ExamManagementSystem.Service
 {
     public class CommonService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IHttpContextAccessor _contextAccessor;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<CommonService> _logger;
-        public CommonService(ApplicationDbContext context, IHttpContextAccessor contextAccessor, UserManager<User> userManager, ILogger<CommonService> logger)
+        public CommonService(UserManager<User> userManager, ILogger<CommonService> logger)
         {
-            _context = context;
-            _contextAccessor = contextAccessor;
             _userManager = userManager;
             _logger = logger;
         }
@@ -48,11 +44,6 @@ namespace ExamManagementSystem.Service
                 _logger.LogError(ex.Message);
                 throw;
             }
-        }
-
-        public async Task<List<Exam>> LoadExams()
-        {
-            return await _context.Exams.ToListAsync();
         }
     }
 }

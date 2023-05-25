@@ -9,36 +9,30 @@
 @using ExamManagementSystem.Pages.Component
 
 @inject ExamManagementSystem.Service.ExamService ExamService
+@inject ExamManagementSystem.Service.ResultService ResultService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
 @inject DialogService DialogService
 @inject IJSRuntime JsRuntime
 
 @attribute [Authorize]
-<br />
-@if (examResults == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <RadzenDataGrid FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="7"
+
+<RadzenDataGrid IsLoading=@(examResults == null) FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="7"
                 Data="@examResults" TItem="ExamResult">
-        <Columns>
-            <RadzenDataGridColumn Width="85%" TItem="ExamResult" Title="Exam (Code)">
-                <Template Context="data">
-                    <RadzenText class="mb-0"> @data.Exam.ExamName (@data.Exam.ExamCode)</RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ExamResult">
-                <Template Context="data">
-                        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => Download(data.Id))
+    <Columns>
+        <RadzenDataGridColumn Width="85%" TItem="ExamResult" Title="Exam (Code)">
+            <Template Context="data">
+                <RadzenText class="mb-0"> @data.Exam.ExamName (@data.Exam.ExamCode)</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ExamResult">
+            <Template Context="data">
+                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => Download(data.Id))
                               Text="Download" Icon="download" Size="ButtonSize.ExtraSmall"></RadzenButton>
-                </Template>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
-}
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
 
 @code {
     private List<ExamResult> examResults = new List<ExamResult>();
@@ -47,11 +41,11 @@ else
     {
         var authstate = await AuthProvider.GetAuthenticationStateAsync();
         User = authstate.User;
-        examResults = await ExamService.GetResults();
+        examResults = await ResultService.MyScorecard();
     }
     async Task Download(int id)
     {
-        var data = await ExamService.DownloadScoreCard(id);
+        var data = await ResultService.DownloadScoreCard(id);
         await JsRuntime.InvokeAsync<object>("saveAsFile", $"Scorecard.pdf", Convert.ToBase64String(data));
     }
 }

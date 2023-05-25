@@ -8,57 +8,51 @@
 @inject ExamManagementSystem.Service.ExamService ExamService
 @inject NavigationManager UriHelper
 
-@attribute [Authorize(Roles ="Student")]
-<h1>Exams</h1>
-
-@if (exams == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <RadzenDataGrid @ref="ordersGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="10" AllowSorting="true"
-                Data="@exams" TItem="Exam">
-        <Columns>
-            <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)" Width="30%">
-                <Template Context="data">
-                    @{var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"exam/{@data.Id}";}
-                    <RadzenText class="mb-0"> <RadzenLink Path="@link" Text="@examName" /></RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Status" Width="15%">
-                <Template Context="data">
-                    <ExamStatus Exam="@data"></ExamStatus>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Date" Width="15%">
-                <Template Context="data">
-                    <ExamDate Exam="@data"></ExamDate>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Time" Width="25%">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.StartTime.ToString("h:mm tt") - @data.EndTime.ToString("h:mm tt") (@data.Duration Mins)
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Examiner" Width="15%">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.Teacher!.Name
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
-}
+@attribute [Authorize(Roles = "Student")]
+<RadzenText TextStyle="TextStyle.DisplayH4" Text="Exams" />
+<RadzenDataGrid IsLoading="@(exams == null)" @ref="examsGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                AllowPaging="true" PageSize="8" AllowSorting="true" Data="@exams" TItem="Exam">
+    <Columns>
+        <RadzenDataGridColumn TItem="Exam" Title="Exam name (Code)" Width="27%">
+            <Template Context="data">
+                <RadzenText><RadzenLink Path="@("exam/"+data.Id)" Text="@(data.ExamName + " (" + data.ExamCode + ")")" /></RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Status" Width="12%">
+            <Template Context="data">
+                <ExamStatus Exam="@data" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Date" Width="13%">
+            <Template Context="data">
+                <ExamDate Exam="@data" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Time" Width="18%">
+            <Template Context="data">
+                <RadzenText Text="@(data.StartTime.ToString("h:mm tt") +" ("+ (@data.Duration +" Mins)"))" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Marks" Width="7%">
+            <Template Context="data">
+                <RadzenText Text="@data.Questions.Sum(x => x.Marks).ToString()" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Examiner" Width="15%">
+            <Template Context="data">
+                <RadzenText Text="@data.Teacher!.Name" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
 
 @code {
-    RadzenDataGrid<Exam> ordersGrid;
+    RadzenDataGrid<Exam>? examsGrid;
+
     private List<Exam> exams;
     protected override async Task OnInitializedAsync()
     {
+
         exams = await ExamService.MyExams();
     }
 }

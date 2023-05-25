@@ -15,7 +15,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12 border border-1 p-2 m-3 text-center">
+        <div class="col-md-12 border border-1 p-2 text-center">
             <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
                 <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
@@ -25,20 +25,19 @@
         </div>
         @if (Exam.ExamStatus != Enums.EnumExamStatus.Started)
         {
-            <div class="col-md-12 border border-1 p-1 m-3 text-center">
-                <RadzenText TextStyle="TextStyle.DisplayH3"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
+            <div class="col-md-12 border border-1 p-2 mb-5 text-center">
+                <RadzenText TextStyle="TextStyle.Body1"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
             </div>
         }
         else
         {
             if (Exam.IsAppearedByCurrentStudent)
             {
-                <div class="col-md-12 m-3 text-center">
-                    <RadzenText TextStyle="TextStyle.DisplayH3" class="text-success">You submitted this exam already</RadzenText>
+                <div class="col-md-12 p-2 mb-5 text-center">
+                    <RadzenText TextStyle="TextStyle.DisplayH3" class="text-success" Text="You submitted this exam already" />
                 </div>
-
-                <div class="col-md-12 m-3 text-center">
-                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"myexams")) Text="Back to my exams"></RadzenButton>
+                <div class="col-md-12 p-2 mb-5 text-center">
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"myexams")) Text="Back to my exams" />
                 </div>
             }
             else
@@ -48,10 +47,10 @@
                     {
                         @foreach (var item in Exam.Questions)
                         {
-                            var bindAnswer = Answers.FirstOrDefault(x => x.QuestionId == item.Id);
+                            var bindAnswer = Answers.First(x => x.QuestionId == item.Id);
                             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="border-bottom:1px solid grey">
                                 <RadzenText> <b>@item.QuestionText</b> </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">@item.Marks Mark(s)</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0" Text="@(item.Marks +"Mark(s)")" />
                             </RadzenStack>
                             <RadzenRadioButtonList @bind-Value=bindAnswer.AnswerId TValue="int" Orientation=Orientation.Vertical class="mb-5">
                                 <Items>
@@ -80,8 +79,8 @@
 
     async Task ConfirmDialog()
     {
-        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure to want to submit?");
-        if (confirmed)
+        bool? confirmed = await DialogService.Confirm("Are you sure to want to submit?", "Submit Exam", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No",CloseDialogOnOverlayClick = true }); ;
+        if (confirmed.GetValueOrDefault())
         {
             await ExamService.SubmitExam(examId, Answers);
             UriHelper.NavigateTo("/");

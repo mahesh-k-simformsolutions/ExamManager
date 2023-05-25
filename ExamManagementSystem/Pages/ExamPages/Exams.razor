@@ -14,86 +14,69 @@
 @inject DialogService DialogService
 
 @attribute [Authorize(Roles = "Teacher,Admin")]
-<h1>Exams</h1>
-<br />
-@if (exams == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Conduct Exam" Style="margin-bottom:15px;" Click="@(args => UriHelper.NavigateTo("createexam"))" Size="ButtonSize.ExtraSmall"></RadzenButton>
-    <RadzenDataGrid @ref="ordersGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" AllowPaging="true" PageSize="7" AllowSorting="true"
-                Data="@exams" TItem="Exam">
-        <Columns>
-            <RadzenDataGridColumn Width="50px" TItem="Exam" Title="#" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
-                <Template Context="data">
-                    @(exams.IndexOf(data) + 1)
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Width="25%" TItem="Exam" Title="Exam name (Code)">
-                <Template Context="data">
-                    @{
-                        var examName = $"{@data.ExamName} ({@data.ExamCode})"; var link = $"exam/{@data.Id}";
-                    }
-                    <RadzenText class="mb-0"> <RadzenLink Path="@link" Text="@examName" /></RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Width="10.5%" TItem="Exam" Title="Status">
-                <Template Context="data">
-                    <ExamStatus Exam="@data"></ExamStatus>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Date">
-                <Template Context="data">
-                    <ExamDate Exam="@data"></ExamDate>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Width="9%" TItem="Exam" Title="Starts">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.StartTime.ToString("h:mm tt")
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Duration">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.Duration Mins
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Questions (Total Marks)">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.Questions.Count() (@data.Questions.Sum(x => x.Marks))
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Examiner">
-                <Template Context="data">
-                    <RadzenText>
-                        @data.Teacher!.Name
-                    </RadzenText>
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Exam" Title="Action">
-                <Template Context="data">
-                    @if (IsEditable(data))
-                    {
-                        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editexam/" + @data.Id))
-                              Text="Edit" Size="ButtonSize.ExtraSmall"></RadzenButton>
-                        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
-                              Text="Delete" Size="ButtonSize.ExtraSmall"></RadzenButton>
-                    }
-                </Template>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
-}
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+    <RadzenText TextStyle="TextStyle.DisplayH4" Text="Exams" />
+    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Conduct Exam" Click="@(args => UriHelper.NavigateTo("createexam"))" Size="ButtonSize.ExtraSmall" />
+</RadzenStack>
+<RadzenDataGrid IsLoading="@(exams == null)" @ref="examsGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                AllowPaging="true" PageSize="8" AllowSorting="true" Data="@exams" TItem="Exam">
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="Exam" Title="#" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+            <Template Context="data">@(exams?.IndexOf(data) + 1)</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="25%" TItem="Exam" Title="Exam name (Code)">
+            <Template Context="data">
+                <RadzenText><RadzenLink Path="@("exam/"+data.Id)" Text="@(data.ExamName + " (" + data.ExamCode + ")")" /></RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="10.5%" TItem="Exam" Title="Status">
+            <Template Context="data">
+                <ExamStatus Exam="@data" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Date">
+            <Template Context="data">
+                <ExamDate Exam="@data" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="9%" TItem="Exam" Title="Starts">
+            <Template Context="data">
+                <RadzenText Text="@data.StartTime.ToString("h:mm tt")" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="10%" TItem="Exam" Title="Duration">
+            <Template Context="data">
+                <RadzenText Text="@(data.Duration +" Mins")" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Marks">
+            <Template Context="data">
+                <RadzenText Text="@data.Questions.Sum(x => x.Marks).ToString()" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Examiner">
+            <Template Context="data">
+                <RadzenText Text="@data.Teacher!.Name" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Exam" Title="Action">
+            <Template Context="data">
+                @if (IsEditable(data))
+                {
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editexam/" + @data.Id))
+                              Text="Edit" Size="ButtonSize.ExtraSmall" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
+                              Text="Delete" Size="ButtonSize.ExtraSmall" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
 
 @code {
-    RadzenDataGrid<Exam> ordersGrid;
+    RadzenDataGrid<Exam>? examsGrid;
     private List<Exam> exams;
     private ClaimsPrincipal? User;
     protected override async Task OnInitializedAsync()
