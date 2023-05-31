@@ -1,0 +1,91 @@
+﻿@page "/importQuestion/{args}"
+
+@using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
+@using static ExamManagementSystem.Pages.ExamPages.ManageExamToQuestion;
+
+@inject CommonService Service
+@inject ExamService ExamService
+@inject QuestionService QService
+<RadzenStack>
+    <RadzenCard class="m-4" style="display: flex; align-items: center; gap: 0.5rem">
+        <RadzenLabel Text="Exam:" />
+        @if (exams != null)
+        {
+            <RadzenDropDown AllowClear="true" @bind-Value=@selectedExam AllowFiltering="true" Data=@exams TValue="int" Change="@(ar => OnExamChanged(ar))"
+                        TextProperty="ExamName" ValueProperty="Id" Style="width: 100%;" />
+        }
+    </RadzenCard>
+    <ExamToQuestionsGrid Questions="@Questions" SelectedQuestionsChanged="(args) => { selectedQuestions = args; }" QuestionsGrid="questionsGrid"></ExamToQuestionsGrid>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+        <RadzenButton title="Import questions from other exam" ButtonStyle="ButtonStyle.Primary" Icon="download" class="mt-2 mb-4" Text="Import"
+                        Click="@Import" Disabled="(selectedQuestions == null || selectedQuestions.Count == 0)" />
+    </RadzenStack>
+</RadzenStack>
+@code {
+    public class ImportQuestionArgs
+    {
+        public Exam exam { get; set; }
+        public EventCallback callback { get; set; }
+    }
+
+    [Parameter]
+    public ImportQuestionArgs args { get; set; }
+
+    public Exam exam { get; set; }
+
+    [Parameter]
+    public EventCallback closeEventCallback { get; set; }
+
+    public List<Exam> exams { get; set; }
+
+    public List<Question> Questions { get; set; }
+
+    public IList<Question> selectedQuestions { get; set; }
+
+    public RadzenDataGrid<Question>? questionsGrid { get; set; }
+
+    public bool ExamContainsAllQuestions { get; set; }
+
+    int selectedExam { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        exam = args.exam;
+        closeEventCallback = args.callback;
+
+        exams = await Service.LoadExams(exam.Id);
+        Questions = await QService.LoadAloneQuestions();
+    }
+
+    private async Task OnExamChanged(object args)
+    {
+        var examId = Convert.ToInt32(args);
+        Questions = await (examId == 0 ? QService.LoadAloneQuestions() : QService.LoadQuestionsByExam(examId));
+
+        Questions = Questions.Where(x => !exam.Questions.Any(y => y.Id == x.Id)).ToList();
+
+        if (selectedQuestions != null)
+        {
+            selectedQuestions.Clear();
+        }
+    }
+
+    private async Task Import()
+    {
+        var examToQuestions = new List<ExamToQuestion>();
+        foreach (var item in selectedQuestions)
+        {
+            examToQuestions.Add(new ExamToQuestion
+                {
+                    ExamId = exam.Id,
+                    QuestionId = item.Id
+                });
+        }
+
+        await QService.IncludeQuestionInExam(examToQuestions);
+
+        await closeEventCallback.InvokeAsync();
+    }
+    private string IsCorrect(bool value) => value ? "text-success" : "";
+}

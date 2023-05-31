@@ -33,6 +33,7 @@ namespace ExamManagementSystem.Service
                 var exam = await _context.Exams
                     .Include(x => x.Teacher)
                     .Include(x => x.ExamToQuestions).ThenInclude(x => x.Question).ThenInclude(x => x.Options)
+                    .Include(x => x.ExamToStudents)
                     .FirstOrDefaultAsync(x => x.Id == id);
 
                 return exam;
@@ -49,12 +50,25 @@ namespace ExamManagementSystem.Service
             try
             {
                 string userId = _contextAccessor.HttpContext!.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
                 Exam? exam = await _context.Exams.Include(x => x.Results)
                     .Include(x => x.Teacher)
                     .Include(x => x.ExamToQuestions).ThenInclude(x => x.Question).ThenInclude(x => x.Options)
                     .FirstOrDefaultAsync(x => x.Id == id);
 
-                exam.IsAppearedByCurrentStudent = exam.Results.Any(x => x.StudentId == userId && x.ExamId == id);
+
+                var examToStudent = await _context.ExamToStudents.FirstOrDefaultAsync(x => x.ExamId == id && x.StudentId == userId);
+
+                exam.IsAppearedByCurrentStudent = examToStudent?.ExamToStudentStatus == Enums.EnumExamToStudentStatus.Appeared;
+
+                if (!exam.IsAppearedByCurrentStudent)
+                {
+                    if (examToStudent != null)
+                    {
+                        examToStudent.ExamToStudentStatus = Enums.EnumExamToStudentStatus.Started;
+                    }
+                    await _context.SaveChangesAsync();
+                }
 
                 return exam;
             }
@@ -67,35 +81,50 @@ namespace ExamManagementSystem.Service
 
         public async Task SubmitExam(int examId, List<Answer> answers)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                string? studentId = answers.FirstOrDefault()?.StudentId;
-                await _context.Answers.AddRangeAsync(answers);
-
-                // calculate score
-                float score = 0F;
-                foreach (Answer item in answers)
+                var selectedAnswers = answers.Where(x => x.AnswerId > 0);
+                if (selectedAnswers.Any())
                 {
-                    if (item.Option.IsCorrect)
+                    string studentId = _contextAccessor.HttpContext!.User!.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+                    float totalMarks = answers.Select(x => x.Question).Sum(x => x.Marks);
+                    float score = 0F;
+
+                    // calculate score
+                    foreach (Answer item in selectedAnswers)
                     {
-                        score += item.Question.Marks;
+                        if (item.Option != null && item.Option.IsCorrect)
+                        {
+                            score += item.Question.Marks;
+                        }
                     }
-                }
-                float totalMarks = answers.Select(x => x.Question).Sum(x => x.Marks);
-                ExamResult result = new()
-                {
-                    StudentId = studentId,
-                    ExamId = examId,
-                    Score = score,
-                    Status = (100 * score / totalMarks) >= 33 ? Enums.ExamResultStatus.Pass : Enums.ExamResultStatus.Fail
-                };
-                _ = _context.ExamResults.Add(result);
 
-                _ = await _context.SaveChangesAsync();
+                    ExamResult examResult = new()
+                    {
+                        StudentId = studentId,
+                        ExamId = examId,
+                        Score = score,
+                        Status = (100 * score / totalMarks) >= 33 ? Enums.ExamResultStatus.Pass : Enums.ExamResultStatus.Fail
+                    };
+
+                    var examToStudent = await _context.ExamToStudents.SingleAsync(eTos => eTos.ExamId == examId && eTos.StudentId == studentId);
+                    examToStudent.ExamToStudentStatus = Enums.EnumExamToStudentStatus.Appeared;
+
+
+                    await _context.Answers.AddRangeAsync(selectedAnswers);
+                    await _context.ExamResults.AddAsync(examResult);
+
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                await transaction.RollbackAsync();
             }
         }
 
@@ -132,7 +161,6 @@ namespace ExamManagementSystem.Service
                                     .Include(e => e.Exam).ThenInclude(e => e.Teacher).Select(x => x.Exam).OrderBy(x => x.ExamStatus).ThenByDescending(x => x.Date);
 
                 return await exams.ToListAsync();
-
             }
             catch (Exception ex)
             {
@@ -172,6 +200,7 @@ namespace ExamManagementSystem.Service
 
         public async Task<int> AssignExamToStudent(List<ExamToStudent> examToStudent)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var result = 0;
@@ -200,6 +229,7 @@ namespace ExamManagementSystem.Service
                         _ = _context.ExamToStudents.Remove(item);
                     }
                     result = await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
                 return result;
 
@@ -207,6 +237,7 @@ namespace ExamManagementSystem.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                await transaction.RollbackAsync();
                 throw;
             }
         }

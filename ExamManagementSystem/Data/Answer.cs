@@ -15,5 +15,11 @@ namespace ExamManagementSystem.Data
         [ForeignKey("Student")]
         public string StudentId { get; set; }
         public User Student { get; set; }
+
+        [ForeignKey("Exam")]
+        public int ExamId { get; set; }
+        public Exam Exam { get; set; }
+
+        // Student: {StudentId} has given exam: {ExamId} and answered a question: {QuestionId} and selected option: {AnswerId}
     }
 }

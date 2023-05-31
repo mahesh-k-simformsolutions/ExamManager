@@ -17,7 +17,9 @@
     public enum EnumExamToStudentStatus
     {
         NotAppeared,
-        Appeared
+        Appeared,
+        Started,
+        LeftUnubmitted
     }
     public enum ExamResultStatus
     {

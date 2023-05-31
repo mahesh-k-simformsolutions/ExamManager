@@ -22,9 +22,9 @@ a, .btn-link {
     padding-top: 1.1rem;
 }
 
-.valid.modified:not([type=checkbox]) {
+/*.valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
-}
+}*/
 
 .invalid {
     outline: 1px solid red;
@@ -32,6 +32,7 @@ a, .btn-link {
 
 .validation-message {
     color: red;
+font-size: 0.7rem;
 }
 
 #blazor-error-ui {

@@ -1,0 +1,133 @@
+﻿@page "/addUpdateQuestion/{args}"
+
+@using ExamManagementSystem.Data;
+@using ExamManagementSystem.Service;
+
+@inject QuestionService QService
+<div class="container-fluid">
+    <div class="row">
+        <RadzenStack>
+            <EditForm EditContext="EditContext" OnValidSubmit="@(async (args)=> { await Save(); })">
+         
+                <ObjectGraphDataAnnotationsValidator />
+                <RadzenStack Orientation=Orientation.Horizontal>
+                    <RadzenFormField Text="Question" Style="width:90%">
+                        <ChildContent>
+                            <RadzenTextArea Rows="4" Name="QuestionText" @bind-Value="Question.QuestionText" Style="width:100%;height:100%; display: block;" />
+                        </ChildContent>
+                        <Helper> <ValidationMessage For="@(() => Question.QuestionText)" /> </Helper>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Marks" Style="width:10%">
+                        <ChildContent><RadzenNumeric Name="Marks" ShowUpDown="false" Min="1" Max="100" @bind-Value="Question.Marks" /></ChildContent>
+                        <Helper><ValidationMessage For="@(() => Question.Marks)" /></Helper>
+                    </RadzenFormField>
+                </RadzenStack>
+                <RadzenStack Orientation=Orientation.Vertical class="my-4">
+                    <RadzenStack Orientation=Orientation.Horizontal>
+                        <RadzenFormField Text="Option 1" Style="width:85%">
+                            <ChildContent>
+                                <RadzenTextBox Name="Opt1" @bind-Value="Question.Options.ElementAt(0).OptText" Style="width:100%; display: block;" />
+                            </ChildContent>
+                            <End>
+                                <RadzenCheckBox Value="Question.Options.ElementAt(0).IsCorrect" TValue="bool" Change="@(ar => UpdateCorrectOption(0))" Style="width:100%; display: block;" />
+                            </End>
+                            <Helper><ValidationMessage For="@(() => Question.Options.ElementAt(0).OptText)"></ValidationMessage></Helper>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Option 2" Style="width:85%">
+                            <ChildContent>
+                                <RadzenTextBox Name="Opt2" @bind-Value="Question.Options.ElementAt(1).OptText" Style="width:100%; display: block;" />
+                            </ChildContent>
+                            <End>
+                                <RadzenCheckBox Value="Question.Options.ElementAt(1).IsCorrect" TValue="bool" Change="@(ar => UpdateCorrectOption(1))" Style="width:100%; display: block;" />
+                            </End>
+                            <Helper><ValidationMessage For="@(() => Question.Options.ElementAt(1).OptText)" /></Helper>
+                        </RadzenFormField>
+                    </RadzenStack>
+                    <RadzenStack Orientation=Orientation.Horizontal>
+                        <RadzenFormField Text="Option 3" Style="width:85%">
+                            <ChildContent>
+                                <RadzenTextBox Name="Opt3" @bind-Value="Question.Options.ElementAt(2).OptText" Style="width:100%; display: block;" />
+                            </ChildContent>
+                            <End>
+                                <RadzenCheckBox Value="Question.Options.ElementAt(2).IsCorrect" TValue="bool" Change="@(ar => UpdateCorrectOption(2))" Style="width:100%; display: block;" />
+                            </End>
+                            <Helper> <ValidationMessage For="@(() => Question.Options.ElementAt(2).OptText)" />  </Helper>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Option 4" Style="width:85%">
+                            <ChildContent>
+                                <RadzenTextBox Name="Opt4" @bind-Value="Question.Options.ElementAt(3).OptText" Style="width:100%; display: block;" />
+                            </ChildContent>
+                            <End>
+                                <RadzenCheckBox Value="Question.Options.ElementAt(3).IsCorrect" TValue="bool" Change="@(ar => UpdateCorrectOption(3))" Style="width:100%; display: block;" />
+                            </End> 
+                            <Helper><ValidationMessage For="@(() => Question.Options.ElementAt(3).OptText)" /></Helper>
+                        </RadzenFormField>
+                    </RadzenStack>
+                </RadzenStack>
+                <div class="col-md-12 p-2 mb-5 text-center">
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Disabled="!EditContext.Validate()" />
+                </div>
+            </EditForm>
+        </RadzenStack>
+    </div>
+</div>
+
+@code {
+
+    public class AddUpdateQuestionArgs
+    {
+        public Question Question { get; set; }
+        public Exam Exam { get; set; }
+        public EventCallback Callback { get; set; }
+    }
+
+    [Parameter]
+    public AddUpdateQuestionArgs args { get; set; }
+    EditContext? EditContext;
+    Question Question;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (args.Question == null)
+        {
+            Question = new Question();
+            Question.Options = new List<Option>();
+            for (int i = 0; i < 4; i++)
+            {
+                Question.Options.Add(new Option()
+                    {
+                        QuestionId = Question.Id,
+                        Question = Question,
+                        IsCorrect = i == 0
+                    });
+            }
+            Question.ExamToQuestions.Add(new ExamToQuestion()
+                {
+                    ExamId = this.args.Exam.Id,
+                    Exam = this.args.Exam,
+                    Question = Question,
+                    QuestionId = Question.Id
+                });
+        }
+        else
+        {
+            Question = args.Question;
+        }
+        EditContext = new(Question);
+        return base.OnInitializedAsync();
+    }
+
+    public async Task Save()
+    {
+        await QService.SaveQuestion(Question);
+        await args.Callback.InvokeAsync();
+    }
+
+    public void UpdateCorrectOption(int index)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            Question.Options.ElementAt(i).IsCorrect = i == index;
+        }
+    }
+}

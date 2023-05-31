@@ -11,10 +11,12 @@ namespace ExamManagementSystem.Service
     {
         private readonly UserManager<User> _userManager;
         private readonly ILogger<CommonService> _logger;
-        public CommonService(UserManager<User> userManager, ILogger<CommonService> logger)
+        private readonly ApplicationDbContext _context;
+        public CommonService(UserManager<User> userManager, ILogger<CommonService> logger, ApplicationDbContext context)
         {
             _userManager = userManager;
             _logger = logger;
+            _context = context;
         }
 
         public async Task<List<User>> LoadStudents()
@@ -38,6 +40,23 @@ namespace ExamManagementSystem.Service
                 IList<User> teachers = await _userManager.GetUsersInRoleAsync(EnumUserRole.Teacher.ToString());
                 return teachers.ToList();
 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
+        public async Task<List<Exam>> LoadExams(params int[] exclude)
+        {
+            try
+            {
+                var exams = await _context.Exams.Include(e => e.ExamToQuestions).ThenInclude(eToq => eToq.Question).ThenInclude(q => q.Options).ToListAsync();
+                if (exclude.Length > 0)
+                {
+                    exams = exams.Where(x => !exclude.Contains(x.Id)).ToList();
+                }
+                return exams;
             }
             catch (Exception ex)
             {

@@ -1,0 +1,101 @@
+﻿@using ExamManagementSystem.Data;
+
+<RadzenDataGrid IsLoading=@(Questions == null) @ref="QuestionsGrid" AllowRowSelectOnRowClick="true" AllowFiltering="false" AllowCompositeDataCells="true"
+                FilterPopupRenderMode="PopupRenderMode.OnDemand" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="3"
+                AllowSorting="false" Data="@Questions" TItem="Question"
+                SelectionMode="DataGridSelectionMode.Multiple"  ValueChanged="HandleGridValueChanged" class="m-4">
+    <Columns>
+        @if (Questions != null)
+        {
+            <RadzenDataGridColumn OrderIndex="0" TItem="Question" Sortable="false" Filterable="false" Width="5%">
+                <HeaderTemplate>
+                    <RadzenCheckBox TriState="false" TValue="bool" Value="@(Questions.Any(i => selectedQuestions != null && selectedQuestions.Contains(i)))"
+                                Change="@(async args => 
+                                        { 
+                                            if(args)
+                                            {
+                                                await HandleGridValueChanged(Questions.ToList());
+                                            }
+                                            else
+                                            {
+                                                await HandleGridValueChanged(null); 
+                                            }
+                                        })" />
+                </HeaderTemplate>
+                <Template Context="data">
+                    <RadzenCheckBox TriState="false" Value="@(selectedQuestions != null && selectedQuestions.Contains(data))"
+                                TValue="bool" Change=@(args => { QuestionsGrid?.SelectRow(data);}) />
+                </Template>
+            </RadzenDataGridColumn>
+        }
+        <RadzenDataGridColumn OrderIndex="1" TItem="Question" Title="Marks" Property="Marks" Width="7%">
+            <Template Context="order">
+                <RadzenText Text="@order.Marks.ToString()" />
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn OrderIndex="2" TItem="Question" Property="QuestionText" Title="Question" Context="data">
+            <Template><RadzenText Text="@data.QuestionText" /></Template>
+            <Columns>
+                <RadzenDataGridColumn TItem="Question" Title="Option 1" Context="data">
+                    <Template>
+                        @{
+                            var opt1 = data.Options.ElementAt(0);
+                        }
+                        <RadzenText class="@IsCorrect(opt1.IsCorrect)">1. @opt1.OptText</RadzenText>
+                    </Template>
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Question" Title="Option 3" Context="data">
+                            <Template>
+                                @{
+                                    var opt3 = data.Options.ElementAt(2);
+                                }
+                                <RadzenText class="@IsCorrect(opt3.IsCorrect)">3. @opt3.OptText</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="Question" Title="Option 2" Context="data">
+                    <Template>
+                        @{
+                            var opt2 = data.Options.ElementAt(1);
+                        }
+                        <RadzenText class="@IsCorrect(opt2.IsCorrect)">2. @opt2.OptText</RadzenText>
+                    </Template>
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Question" Title="Option 4" Context="data">
+                            <Template>
+                                @{
+                                    var opt4 = data.Options.ElementAt(3);
+                                }
+                                <RadzenText class="@IsCorrect(opt4.IsCorrect)">4. @opt4.OptText</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+@code {
+
+    [Parameter]
+    public List<Question> Questions { get; set; }
+
+    [Parameter]
+    public EventCallback<IList<Question>> SelectedQuestionsChanged { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<Question>? QuestionsGrid { get; set; }
+
+    IList<Question>? selectedQuestions { get; set; }
+
+    string IsCorrect(bool value) => value ? "text-success" : "";
+
+    async Task HandleGridValueChanged(IList<Question> updatedSelectedQuestions)
+    {
+        selectedQuestions = updatedSelectedQuestions;
+        await SelectedQuestionsChanged.InvokeAsync(selectedQuestions);
+    }
+}

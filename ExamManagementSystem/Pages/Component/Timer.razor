@@ -1,0 +1,74 @@
+﻿@page "/timer"
+
+@inject NotificationService NotificationService
+
+<RadzenText TextStyle="TextStyle.Subtitle2" class="@GetTimerColor(elapsedTime)"><b>Time left:  @FormatTime(elapsedTime)</b></RadzenText>
+
+@code {
+    [Parameter]
+    public string DurationInMinutes { get; set; }
+
+    [Parameter]
+    public EventCallback AutoSubmitCallback { get; set; }
+
+    private System.Timers.Timer timer;
+    private int elapsedTime;
+    private int totalSeconds;
+
+    protected override void OnInitialized()
+    {
+        double.TryParse(DurationInMinutes, out double durationMinutes);
+        if (durationMinutes > 0)
+        {
+            totalSeconds = (int)(durationMinutes * 60);
+            elapsedTime = totalSeconds;
+
+            timer = new System.Timers.Timer(1000); // Timer interval set to 1 second (1000 milliseconds)
+            timer.Elapsed += TimerElapsed;
+            timer.AutoReset = true;
+
+            timer.Start();
+        }
+    }
+
+    private async void TimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        elapsedTime--;
+
+        // Notify when 10 minutes left
+        if (elapsedTime == 600)
+        {
+            NotificationService.Notify(new NotificationMessage() { Severity = NotificationSeverity.Warning, Summary = "You have 10 minutes left" });
+        }
+
+        if (elapsedTime == 300)
+        {
+            // Pre auto submit exam notification
+            NotificationService.Notify(new NotificationMessage() { Severity = NotificationSeverity.Warning, Summary = "Exam will be auto submitted in next 5 minutes" });
+        }
+
+        if (elapsedTime == 0)
+        {
+            // Auto submit exam
+            await InvokeAsync(async () => await AutoSubmitCallback.InvokeAsync());
+            timer.Stop();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        timer.Stop();
+        timer.Dispose();
+    }
+
+    private string FormatTime(int totalSeconds)
+    {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return $"{minutes:D2}:{seconds:D2}";
+    }
+
+    private string GetTimerColor(int totalSeconds) => totalSeconds <= 600 ? "text-danger" : "";
+}

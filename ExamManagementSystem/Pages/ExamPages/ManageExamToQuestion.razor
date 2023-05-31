@@ -4,213 +4,89 @@
 @using ExamManagementSystem.Pages.Component
 @using Microsoft.EntityFrameworkCore
 @using NuGet.Packaging;
+@using static ExamManagementSystem.Pages.Component.AddUpdateQuestion;
+@using static ExamManagementSystem.Pages.Component.ImportQuestion;
 
 @inject CommonService Service
 @inject ExamService ExamService
 @inject QuestionService QuestionService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
+@inject DialogService DialogService
 
 <div class="p-3 border border-1">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <RadzenText TextStyle="TextStyle.DisplayH5" Text="Questions"></RadzenText>
-        <RadzenButton ButtonStyle="ButtonStyle.Success" Style="width:10%;" Icon="add_circle_outline" class="mt-2 mb-4" Text="Add" Click="@InsertRow"
-                      Disabled=@(questionToInsert != null || questionToUpdate != null) />
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenButton title="Import questions from other exam" ButtonStyle="ButtonStyle.Primary" Icon="download" class="mt-2 mb-4" Text="Import"
+                          Click="@ImportQuestions" Disabled="@(selectedQuestions != null && selectedQuestions.Count > 0)" />
+            <RadzenButton ButtonStyle="ButtonStyle.Success" class="mt-2 mb-4" Text="@(selectedQuestions != null && selectedQuestions.Count == 1 ? "Update" : "Add")"
+                          Click="@AddUpdateQuestion" Disabled="@(selectedQuestions != null && selectedQuestions.Count > 1)" />
+            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" class="mt-2 mb-4" Text="Delete"
+                          Click="@(async (args) => { await QuestionService.ExlcudeQuestionFromExam(Exam.Id, new List<int> { selectedQuestions.First().Id }); await LoadGridData(); })"
+                          Disabled="@((selectedQuestions != null && selectedQuestions.Count > 1) || selectedQuestions == null || selectedQuestions.Count == 0)" />
+        </RadzenStack>
     </RadzenStack>
-    <RadzenDataGrid LoadData="LoadGridData" AllowCompositeDataCells="true" @ref="questionsGrid" AllowAlternatingRows="false" AllowPaging="true"
-                    PageSize="5" EditMode="DataGridEditMode.Single" AllowColumnResize="true" Data="@Questions" TItem="Question" RowUpdate="@OnUpdateRow"
-                    RowCreate="@OnCreateRow" Sort="@Reset" Page="@Reset" Filter="@Reset">
-        <Columns>
-            <RadzenDataGridColumn TItem="Question" Property="QuestionText" Title="Question" Width="35%" Context="data">
-                <EditTemplate>
-                    <RadzenTextArea Rows="4" @bind-Value="data.QuestionText" Style="width:100%;height:100%; display: block;" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Title="Option 1" Width="35%" Context="data">
-                <Template>1. @data.Options.ElementAt(0).OptText </Template>
-                <EditTemplate>
-                    <RadzenTextBox @bind-Value="data.Options.ElementAt(0).OptText" Style="width:100%; display: block;" />
-                </EditTemplate>
-                <Columns>
-                    <RadzenDataGridColumn TItem="Question" Title="Option 2" Context="data">
-                        <Template>2. @data.Options.ElementAt(1).OptText</Template>
-                        <EditTemplate>
-                            <RadzenTextBox @bind-Value="data.Options.ElementAt(1).OptText" Style="width:100%; display: block;" />
-                        </EditTemplate>
-                        <Columns>
-                            <RadzenDataGridColumn TItem="Question" Title="Option 3" Context="data">
-                                <Template>3. @data.Options.ElementAt(2).OptText</Template>
-                                <EditTemplate>
-                                    <RadzenTextBox @bind-Value="data.Options.ElementAt(2).OptText" Style="width:100%; display: block;" />
-                                </EditTemplate>
-                                <Columns>
-                                    <RadzenDataGridColumn TItem="Question" Title="Option 4" Context="data">
-                                        <Template>4. @data.Options.ElementAt(3).OptText</Template>
-                                        <EditTemplate>
-                                            <RadzenTextBox @bind-Value="data.Options.ElementAt(3).OptText" Style="width:100%; display: block;" />
-                                        </EditTemplate>
-                                    </RadzenDataGridColumn>
-                                </Columns>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Title="Marks" Property="Marks" Width="9%">
-                <EditTemplate Context="order">
-                    <RadzenNumeric ShowUpDown="false" Min="1" Max="100" @bind-Value="order.Marks" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Title="Correct Option" Property="Marks" Width="7%" Context="data">
-                <Template>@data.Options?.FirstOrDefault(x=>x.IsCorrect)?.OptText</Template>
-                <EditTemplate>
-                    <RadzenRadioButtonList @bind-Value=@data.CorrectOptionIndex Change="@(args => UpdateCorrectOption(data))" TValue="int" Orientation=Orientation.Vertical>
-                        <Items>
-                            @for (int i = 0; i < data.Options.Count; i++)
-                            {
-                                var txt = (i + 1).ToString();
-                                <RadzenRadioButtonListItem Text="@txt" Value=@i />
-                            }
-                        </Items>
-                    </RadzenRadioButtonList>
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Question" Context="data" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="18%">
-                <Template>
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(data))" @onclick:stopPropagation="true" />
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" />
-                </Template>
-                <EditTemplate>
-                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(data))" />
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(data))" />
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(data))" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
+    <ExamToQuestionsGrid Questions="@Questions" SelectedQuestionsChanged="(args) => { selectedQuestions = args; }" QuestionsGrid="questionsGrid"></ExamToQuestionsGrid>
 </div>
 @code {
     [Parameter]
     public Exam Exam { get; set; }
 
-    RadzenDataGrid<Question> questionsGrid;
+    RadzenDataGrid<Question>? questionsGrid;
 
-    IEnumerable<Question> Questions = new List<Question>();
+    List<Question>? Questions;
 
-    Question? questionToInsert;
-    Question? questionToUpdate;
+    public IList<Question>? selectedQuestions { get; set; }
 
-    void Reset()
-    {
-        questionToInsert = null;
-        questionToUpdate = null;
-    }
-    
+    dynamic? importQuestionDialog;
+    dynamic? addUpdateQuestionDialog;
+
     async Task LoadGridData()
     {
-        if (Exam.Id > 0)
-        {
-            Questions = await QuestionService.LoadQuestionsByExam(Exam.Id);
-        }
+        Questions = await QuestionService.LoadQuestionsByExam(Exam.Id);
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
         await LoadGridData();
     }
-    async Task EditRow(Question order)
+
+    async Task ImportQuestions()
     {
-        questionToUpdate = order;
-        await questionsGrid.EditRow(order);
-    }
-
-    void OnUpdateRow(Question order)
-    {
-        if (order == questionToInsert)
-        {
-            questionToInsert = null;
-        }
-        questionToUpdate = null;
-        QuestionService.SaveQuestion(order);
-    }
-
-    async Task SaveRow(Question order)
-    {
-        await questionsGrid.UpdateRow(order);
-    }
-
-    void CancelEdit(Question order)
-    {
-        if (order == questionToInsert)
-        {
-            questionToInsert = null;
-        }
-        questionToUpdate = null;
-        questionsGrid.CancelEditRow(order);
-    }
-
-    async Task DeleteRow(Question order)
-    {
-        if (order == questionToInsert)
-        {
-            questionToInsert = null;
-        }
-
-        if (order == questionToUpdate)
-        {
-            questionToUpdate = null;
-        }
-
-        if (Questions.Contains(order))
-        {
-            await QuestionService.DeleteQ(order.Id);
-
-            await questionsGrid.Reload();
-        }
-        else
-        {
-            questionsGrid.CancelEditRow(order);
-            await questionsGrid.Reload();
-        }
-    }
-
-    async Task InsertRow()
-    {
-        questionToInsert = new Question();
-        questionToInsert.Options = new List<Option>();
-        for (int i = 0; i < 4; i++)
-        {
-            questionToInsert.Options.Add(new Option()
-                    {
-                        QuestionId = questionToInsert.Id,
-                        Question = questionToInsert,
-                        IsCorrect = i == 0
-                    });
-        }
-        questionToInsert.ExamToQuestions.Add(new ExamToQuestion()
+        var args = new ImportQuestionArgs
             {
-                ExamId = this.Exam.Id,
-                Exam = this.Exam,
-                Question = questionToInsert,
-                QuestionId = questionToInsert.Id
+                exam = Exam,
+                callback = new EventCallback(this, () => { CloseDialog(importQuestionDialog); })
+            };
+        importQuestionDialog = await DialogService.OpenAsync<ImportQuestion>("Import Questions", new Dictionary<string, object>() { { "args", args } }, 
+        new DialogOptions()
+            {
+                Width = "80%",
+                CloseDialogOnOverlayClick = true
             });
-        await questionsGrid.InsertRow(questionToInsert);
     }
 
-    void OnCreateRow(Question order)
+    public async Task AddUpdateQuestion()
     {
-        QuestionService.SaveQuestion(order);
-        questionToInsert = null;
-        questionsGrid.Reload();
+        var data = selectedQuestions != null ? selectedQuestions.FirstOrDefault() : null;
+        var args = new AddUpdateQuestionArgs
+            {
+                Question = data,
+                Exam = Exam,
+                Callback = new EventCallback(this, () => { CloseDialog(addUpdateQuestionDialog); })
+            };
+        addUpdateQuestionDialog = await DialogService.OpenAsync<AddUpdateQuestion>((data == null ? "Add" : "Update") + " Question", new Dictionary<string, object>() { { "args", args } },
+        new DialogOptions()
+            {
+                Width = "80%",
+                CloseDialogOnOverlayClick = true
+            });
     }
 
-    void UpdateCorrectOption(Question question)
+    public async Task CloseDialog(dynamic dialog)
     {
-        var correct = question.Options.ElementAt(question.CorrectOptionIndex);
-        foreach (var opt in question.Options)
-        {
-            opt.IsCorrect = opt == correct ? true : false;
-        }
+        DialogService.Close(dialog);
+        await LoadGridData();
     }
 }

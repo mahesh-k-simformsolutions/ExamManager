@@ -18,12 +18,12 @@
         <div class="col-md-12 border border-1 p-2 text-center">
             <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-                <RadzenText>Duration: <b>@Exam.Duration Mins</b> </RadzenText>
-                <RadzenText>Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
-                <RadzenText TextStyle="TextStyle.Subtitle1">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle2" Class="rz-m-0">Marks : <b>@Exam.Questions?.Sum(x => x.Marks)</b></RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle2">Date: <b>@Exam.Date.ToString("dd/MM/yyyy")</b> at <b>@Exam.StartTime.ToString("h:mm tt")</b> </RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle2">Duration: <b>@Exam.Duration Mins</b> </RadzenText>
             </RadzenStack>
         </div>
-        <div class="col-md-12 border border-1 p-1 mb-5 text-center">
+        <div class="col-md-12 border border-1 pt-1 mb-5 text-center">
             <RadzenText TextStyle="TextStyle.Body1"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
         </div>
         <AuthorizeView Roles="Teacher,Admin">

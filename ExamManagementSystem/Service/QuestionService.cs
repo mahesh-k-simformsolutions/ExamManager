@@ -39,7 +39,18 @@ namespace ExamManagementSystem.Service
                 throw;
             }
         }
-
+        public async Task<List<Question>> LoadAloneQuestions()
+        {
+            try
+            {
+                return await _context.Questions.Include(x => x.ExamToQuestions).Include(x => x.Options).Where(x => x.ExamToQuestions.Count == 0).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
         public async Task<List<ExamToQuestion>> GetExamsToQuestionByQuestion(int qId)
         {
             try
@@ -74,12 +85,12 @@ namespace ExamManagementSystem.Service
             }
         }
 
-        public int SaveQuestion(Question q)
+        public async Task<int> SaveQuestion(Question q)
         {
             try
             {
                 _ = q.Id > 0 ? _context.Questions.Update(q) : _context.Questions.Add(q);
-                return _context.SaveChanges();
+                return await _context.SaveChangesAsync();
 
             }
             catch (Exception ex)
@@ -89,7 +100,7 @@ namespace ExamManagementSystem.Service
             }
         }
 
-        public int IncludeQuestionInExam(List<ExamToQuestion> examToQuestions)
+        public async Task<int> IncludeQuestionInExam(List<ExamToQuestion> examToQuestions)
         {
             try
             {
@@ -98,7 +109,7 @@ namespace ExamManagementSystem.Service
                 {
                     _ = examToQuestion.Id > 0 ? _context.ExamToQuestions.Update(examToQuestion) : _context.ExamToQuestions.Add(examToQuestion);
                 }
-                return _context.SaveChanges();
+                return await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -106,7 +117,25 @@ namespace ExamManagementSystem.Service
                 throw;
             }
         }
+        public async Task<int> ExlcudeQuestionFromExam(int examId, List<int> examToQuestionIdList)
+        {
+            try
+            {
+                var examToQuestions = await _context.ExamToQuestions.Where(x => x.ExamId == examId && examToQuestionIdList.Contains(x.QuestionId)).ToListAsync();
+                if (examToQuestions != null)
+                {
+                    _context.ExamToQuestions.RemoveRange(examToQuestions);
+                    return await _context.SaveChangesAsync();
+                }
+                return 0;
 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
         public async Task<int> DeleteQ(int id)
         {
             try
