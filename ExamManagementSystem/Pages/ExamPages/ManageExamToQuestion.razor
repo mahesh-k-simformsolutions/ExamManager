@@ -1,11 +1,10 @@
 ﻿@using ExamManagementSystem.Data
+@using ExamManagementSystem.Pages.Component.Parameters;
 @using ExamManagementSystem.Service
 @using ExamManagementSystem
 @using ExamManagementSystem.Pages.Component
 @using Microsoft.EntityFrameworkCore
 @using NuGet.Packaging;
-@using static ExamManagementSystem.Pages.Component.AddUpdateQuestion;
-@using static ExamManagementSystem.Pages.Component.ImportQuestion;
 
 @inject CommonService Service
 @inject ExamService ExamService
@@ -23,7 +22,7 @@
             <RadzenButton ButtonStyle="ButtonStyle.Success" class="mt-2 mb-4" Text="@(selectedQuestions != null && selectedQuestions.Count == 1 ? "Update" : "Add")"
                           Click="@AddUpdateQuestion" Disabled="@(selectedQuestions != null && selectedQuestions.Count > 1)" />
             <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" class="mt-2 mb-4" Text="Delete"
-                          Click="@(async (args) => { await QuestionService.ExlcudeQuestionFromExam(Exam.Id, new List<int> { selectedQuestions.First().Id }); await LoadGridData(); })"
+                          Click="@ExlcudeQuestionFromExam"
                           Disabled="@((selectedQuestions != null && selectedQuestions.Count > 1) || selectedQuestions == null || selectedQuestions.Count == 0)" />
         </RadzenStack>
     </RadzenStack>
@@ -88,5 +87,17 @@
     {
         DialogService.Close(dialog);
         await LoadGridData();
+    }
+
+    public async Task ExlcudeQuestionFromExam()
+    {
+        bool? confirmed = await DialogService.Confirm("Are you sure to want to delete? Question will be excluded from this exam", "Delete Question",
+                                                       new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No", CloseDialogOnOverlayClick = true });
+        if (confirmed.GetValueOrDefault())
+        {
+            await QuestionService.ExlcudeQuestionFromExam(Exam.Id, new List<int> { selectedQuestions.First().Id });
+            await LoadGridData();
+            questionsGrid.Reload();
+        }
     }
 }

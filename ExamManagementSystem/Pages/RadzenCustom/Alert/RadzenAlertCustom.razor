@@ -1,0 +1,43 @@
+﻿@using System.Collections.Specialized;
+<div class="alerts">
+    @if (Service.Alerts != null)
+    {
+        @for (var i = 0; i < Service.Alerts.Count; i++)
+        {
+            @DrawMessage(i, Service.Alerts[i])
+        }
+    }
+</div>
+@code {
+    [Inject] private AlertService Service { get; set; }
+
+    RenderFragment DrawMessage(int index, RadzenAlert m)
+    {
+        return new RenderFragment(builder =>
+        {
+            var i = 0;
+            builder.OpenComponent(i, typeof(RadzenAlert));
+            builder.AddAttribute(i++, "Text", m.Text);
+            builder.AddAttribute(i++, "AlertStyle", m.AlertStyle);
+            builder.AddAttribute(i++, "Variant", m.Variant);
+            builder.AddAttribute(i++, "Shade", m.Shade);
+            builder.AddAttribute(i++, "class", "m-0 py-2 rz-alert-custom");
+            builder.CloseComponent();
+        });
+    }
+
+    void Update(object sender, NotifyCollectionChangedEventArgs args)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Service.Alerts.CollectionChanged -= Update;
+    }
+
+    protected override void OnInitialized()
+    {
+        Service.Alerts.CollectionChanged += Update;
+    }
+}

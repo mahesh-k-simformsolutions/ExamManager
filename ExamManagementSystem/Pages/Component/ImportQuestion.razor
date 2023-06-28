@@ -1,6 +1,7 @@
 ﻿@page "/importQuestion/{args}"
 
 @using ExamManagementSystem.Data
+@using ExamManagementSystem.Pages.Component.Parameters;
 @using ExamManagementSystem.Service
 @using static ExamManagementSystem.Pages.ExamPages.ManageExamToQuestion;
 
@@ -23,11 +24,7 @@
     </RadzenStack>
 </RadzenStack>
 @code {
-    public class ImportQuestionArgs
-    {
-        public Exam exam { get; set; }
-        public EventCallback callback { get; set; }
-    }
+   
 
     [Parameter]
     public ImportQuestionArgs args { get; set; }

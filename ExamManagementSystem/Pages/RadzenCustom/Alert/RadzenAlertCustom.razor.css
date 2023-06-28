@@ -1,0 +1,9 @@
+.rz-alert-custom {
+    border-radius: 1px !important;
+}
+
+.alerts {
+    position: sticky;
+    top: 3.5rem;
+    z-index: 9999;
+}

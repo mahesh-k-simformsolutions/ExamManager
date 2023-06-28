@@ -1,6 +1,7 @@
 ﻿using ExamManagementSystem.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using static ExamManagementSystem.Shared.MainLayout;
 
 namespace ExamManagementSystem.Hubs
 {
@@ -9,6 +10,7 @@ namespace ExamManagementSystem.Hubs
     {
         private readonly static Dictionary<string, string> _connections = new();
 
+        public List<Alert> Alerts = new();
         public override Task OnConnectedAsync()
         {
             string userMail = Context.User.Identity.Name;
@@ -26,7 +28,7 @@ namespace ExamManagementSystem.Hubs
             return base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override Task OnDisconnectedAsync(Exception exception)
         {
             string userMail = Context.User.Identity.Name;
 
@@ -42,7 +44,17 @@ namespace ExamManagementSystem.Hubs
         {
             if (_connections.TryGetValue(userMail, out string connectionId))
             {
-                await Clients.Client(connectionId).SendAsync("NotifyExamStatus", exam);
+                var args = new Exam
+                {
+                    Id = exam.Id,
+                    EndTime = exam.EndTime,
+                    StartTime = exam.StartTime,
+                    Date = exam.Date,
+                    ExamCode = exam.ExamCode,
+                    ExamStatus = exam.ExamStatus,
+                    ExamName = exam.ExamName
+                };
+                await Clients.Client(connectionId).SendAsync("NotifyExamStatus", args);
             }
             else
             {

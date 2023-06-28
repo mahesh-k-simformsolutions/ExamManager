@@ -10,7 +10,7 @@
 @inject ExamService ExamService
 @inject NavigationManager UriHelper
 @inject AuthenticationStateProvider AuthProvider
-
+@inject DataStore DataStore
 @attribute [Authorize]
 
 <div class="container-fluid">
@@ -26,20 +26,13 @@
         <div class="col-md-12 border border-1 pt-1 mb-5 text-center">
             <RadzenText TextStyle="TextStyle.Body1"><ExamStatus Exam="@Exam"></ExamStatus></RadzenText>
         </div>
-        <AuthorizeView Roles="Teacher,Admin">
+        <AuthorizeView Policy="VerifiedTeacherOrAdmin">
             <div class="col-md-12 border border-1 p-2 mb-5 text-center">
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
                     <RadzenText>Examiner: <b>@Exam.Teacher?.Name</b></RadzenText>
                     <RadzenText>Students appearing for this exam: <b>@Students.Count</b></RadzenText>
                 </RadzenStack>
             </div>
-
-            @if (Exam.ExamStatus == Enums.EnumExamStatus.NotStarted)
-            {
-                <div class="col-md-12 p-2 mb-5 text-center">
-                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"editexam/{examId}")) Text="Edit"></RadzenButton>
-                </div>
-            }
 
             <RadzenText TextStyle="TextStyle.DisplayH6" Text="Students" />
             <div class="col-md-12 border border-1 p-2 mb-5">
@@ -53,8 +46,16 @@
                     <Questions Data="Exam.Questions" ShowActionButtons="false"></Questions>
                 }
             </div>
+
+
+            @if (Exam.ExamStatus == Enums.EnumExamStatus.NotStarted)
+            {
+                <div class="col-md-12 p-2 mb-5 text-center">
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@(args => UriHelper.NavigateTo($"editexam/{examId}")) Text="Edit"></RadzenButton>
+                </div>
+            }
         </AuthorizeView>
-        <AuthorizeView Roles="Student">
+        <AuthorizeView Policy="VerifiedStudent">
             @if (Exam.ExamStatus == Enums.EnumExamStatus.Started)
             {
                 <div class="col-md-12 p-2 mb-5 text-center">
@@ -64,6 +65,7 @@
         </AuthorizeView>
     </div>
 </div>
+<PageTitle>@Exam?.ExamName</PageTitle>
 @code {
     [Parameter]
     public int examId { get; set; }
@@ -75,12 +77,21 @@
     {
         try
         {
-            Exam = await ExamService.GetExamById(examId);
-            Students = await ExamService.GetExamsToStudentByExam(examId);
+            await Refresh();
         }
         catch (Exception ex)
         {
             throw;
         }
+    }
+    async Task Refresh()
+    {
+        Exam = await ExamService.GetExamById(examId);
+        Students = await ExamService.GetExamsToStudentByExam(examId);
+        //  examsGrid?.Reload();
+    }
+    public void Dispose()
+    {
+        DataStore.DataChanged -= Refresh;
     }
 }

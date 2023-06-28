@@ -3,6 +3,7 @@ using ExamManagementSystem.Data.DbContext;
 using ExamManagementSystem.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 namespace ExamManagementSystem.Service
@@ -57,6 +58,24 @@ namespace ExamManagementSystem.Service
                     exams = exams.Where(x => !exclude.Contains(x.Id)).ToList();
                 }
                 return exams;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task VerifyUser(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    user.Verified = true;
+                    await _userManager.UpdateAsync(user);
+                }
             }
             catch (Exception ex)
             {

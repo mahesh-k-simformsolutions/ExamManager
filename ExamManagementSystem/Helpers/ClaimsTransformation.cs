@@ -27,8 +27,9 @@ namespace ExamManagementSystem.Helpers
                     if (!principal.HasClaim(claim => claim.Type == newIdentity.RoleClaimType) && role.Count > 0)
                     {
                         newIdentity.AddClaim(new Claim(newIdentity.RoleClaimType, role[0]));
-                       // newIdentity.AddClaim(new Claim(newIdentity, role[0]));
+                        // newIdentity.AddClaim(new Claim(newIdentity, role[0]));
                     }
+                    newIdentity.AddClaim(new Claim("Verified", user.Verified.ToString()));
                 }
             }
             return clone;

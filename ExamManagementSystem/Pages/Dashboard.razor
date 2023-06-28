@@ -1,6 +1,144 @@
 ﻿@page "/dashboard"
-<h3>Dashboard</h3>
+<PageTitle>Dashboard</PageTitle>
 
+@using ExamManagementSystem.Data;
+@using ExamManagementSystem.Service;
+
+@inject CommonService Service
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6 p-2">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenText TextStyle="TextStyle.DisplayH5" Text="Instructors"></RadzenText>
+            </RadzenStack>
+            <RadzenDataGrid IsLoading="@(Instructors == null)" @ref="instructorsGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                            AllowPaging="true" PageSize="4" AllowSorting="false" Data="@Instructors" TItem="User" ShowCellDataAsTooltip="true">
+                <Columns>
+                    <RadzenDataGridColumn TItem="User" Title="Name">
+                        <Template Context="data">
+                            <RadzenText>
+                                @data.Name &nbsp;
+                                @if (data.Verified)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Variant="Variant.Filled" Text="Verified" />
+                                }
+                            </RadzenText>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="User" Title="Email">
+                    <Template Context="data">
+                            <RadzenText>
+                                @data.Email 
+                            </RadzenText>
+                        </Template>
+                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="User" Title="Action" Width="15%">
+                        <Template Context="data">
+                            @if (!@data.Verified)
+                            {
+                                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Success" Click=@(async args => {await Service.VerifyUser(data.Id); await LoadGridData();})
+                                              title="Verify" Size="ButtonSize.ExtraSmall" Disabled="@data.Verified" Icon="check_circle" Variant="Variant.Text" />
+                            }
+                            <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Text"
+                                          title="Delete" Size="ButtonSize.ExtraSmall" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+        <div class="col-md-6 p-2">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenText TextStyle="TextStyle.DisplayH5" Text="Students"></RadzenText>
+            </RadzenStack>
+            <RadzenDataGrid IsLoading="@(Students == null)" @ref="studentsGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                            AllowPaging="true" PageSize="4" AllowSorting="false" Data="@Students" TItem="User" ShowCellDataAsTooltip="true">
+                <Columns>
+                    <RadzenDataGridColumn TItem="User" Title="Name">
+                        <Template Context="data">
+                            <RadzenText>
+                                @data.Name &nbsp;
+                                @if (data.Verified)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Variant="Variant.Filled" Text="Verified" />
+                                }
+                            </RadzenText>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="User" Title="Email">
+                    <Template Context="data">
+                            <RadzenText>
+                                @data.Email 
+                            </RadzenText>
+                        </Template>
+                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="User" Title="Action" Width="15%">
+                        <Template Context="data">
+                            @if (!@data.Verified)
+                            {
+                                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Success" Click=@(async args => {await Service.VerifyUser(data.Id); await LoadGridData();})
+                                              title="Verify" Size="ButtonSize.ExtraSmall" Icon="check_circle" Disabled="@data.Verified" Variant="Variant.Text" />
+                            }
+                            <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Text"
+                                          title="Delete" Size="ButtonSize.ExtraSmall" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+       @* <div class="col-md-12 p-2">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenText TextStyle="TextStyle.DisplayH5" Text="Students"></RadzenText>
+            </RadzenStack>
+            <RadzenDataGrid IsLoading="@(Exams == null)" @ref="examGrid" AllowColumnResize="true" AllowColumnReorder="true" FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                            AllowPaging="true" PageSize="4" AllowSorting="false" Data="@Exams" TItem="Exam" ShowCellDataAsTooltip="true">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Exam" Title="Name">
+                        <Template Context="data">
+                            <RadzenText>
+                                @data.Name
+                            </RadzenText>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Exam" Title="Email">
+                        <Template Context="data">
+                            <RadzenText>
+                                @data.Email
+                            </RadzenText>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Exam" Title="Action" Width="30%">
+                        <Template Context="data">
+                            @if (!@data.Verified)
+                            {
+                                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(async args => {await Service.VerifyUser(data.Id); await LoadGridData();})
+                                          Text="Verify" Size="ButtonSize.ExtraSmall" Disabled="@data.Verified" />
+                            }
+                            <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger"
+                                          Text="Delete" Size="ButtonSize.ExtraSmall" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>*@
+    </div>
+</div>
 @code {
+    List<User> selectedInstructors;
+    List<User> Instructors;
+    List<User> Students;
+    RadzenDataGrid<User> instructorsGrid;
+    RadzenDataGrid<User> studentsGrid;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGridData();
+    }
+
+    async Task LoadGridData()
+    {
+        Instructors = await Service.LoadTeachers();
+        Students = await Service.LoadStudents();
+    }
 }

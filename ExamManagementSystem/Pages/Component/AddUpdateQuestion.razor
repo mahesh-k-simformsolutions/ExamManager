@@ -1,9 +1,13 @@
 ﻿@page "/addUpdateQuestion/{args}"
 
+<PageTitle>@PageTitle</PageTitle>
+
 @using ExamManagementSystem.Data;
+@using ExamManagementSystem.Pages.Component.Parameters;
 @using ExamManagementSystem.Service;
 
 @inject QuestionService QService
+
 <div class="container-fluid">
     <div class="row">
         <RadzenStack>
@@ -74,18 +78,13 @@
 
 @code {
 
-    public class AddUpdateQuestionArgs
-    {
-        public Question Question { get; set; }
-        public Exam Exam { get; set; }
-        public EventCallback Callback { get; set; }
-    }
-
     [Parameter]
     public AddUpdateQuestionArgs args { get; set; }
+
     EditContext? EditContext;
     Question Question;
 
+    string PageTitle { get => (EditContext != null && EditContext.IsModified() ? "**" : "") + args?.Exam?.ExamName + " - " + (args?.Question == null ? "Add" : "Update") + " Question"; }
     protected override Task OnInitializedAsync()
     {
         if (args.Question == null)

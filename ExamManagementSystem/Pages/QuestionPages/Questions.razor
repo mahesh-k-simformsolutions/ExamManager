@@ -1,20 +1,20 @@
 ﻿@page "/questions"
 
-<PageTitle>Questions</PageTitle>
-
 @using ExamManagementSystem.Data
+@using ExamManagementSystem.Service
 @using System.Security.Claims;
-@inject ExamManagementSystem.Service.ExamService ExamService
-@inject ExamManagementSystem.Service.QuestionService QService
+@inject ExamService ExamService
+@inject QuestionService QService
 @inject NavigationManager UriHelper
-
+@inject DialogService DialogService
 @inject AuthenticationStateProvider AuthProvider
-@attribute [Authorize(Roles = "Teacher,Admin")]
-    @if (ShowActionButtons)
+
+@attribute [Authorize(Policy = "VerifiedTeacherOrAdmin")]
+   
+@if (ShowActionButtons)
 {
-    <AuthorizeView Roles="Teacher,Admin">
-        <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Add Question" Style="margin-bottom:15px;" Click="@(args => UriHelper.NavigateTo("createquestion"))" Size="ButtonSize.ExtraSmall"></RadzenButton>
-    </AuthorizeView>
+    <PageTitle>Questions</PageTitle>
+    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="add" Text="Add Question" Style="margin-bottom:15px;" Click="@(args => UriHelper.NavigateTo("createquestion"))" Size="ButtonSize.ExtraSmall" />
 }
 <div class="container-fluid">
     <div class="row">
@@ -28,12 +28,12 @@
                     </RadzenDataGridColumn>
                     @if (ShowActionButtons)
                     {
-                        <RadzenDataGridColumn Width="25%" TItem="Question" Title="Action">
+                        <RadzenDataGridColumn Width="12%" TItem="Question" Title="Action">
                             <Template Context="data">
                                 <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editquestion/" + @data.Id))
-                                          Text="Edit" Size="ButtonSize.ExtraSmall" />
-                                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteQ(@data.Id))
-                                          Text="Delete" Size="ButtonSize.ExtraSmall" />
+                                              title="Edit" Size="ButtonSize.ExtraSmall" Icon="edit" Variant="Variant.Text" />
+                                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteQuestion(@data.Id))
+                                          title="Delete" Size="ButtonSize.ExtraSmall" Icon="delete" Variant="Variant.Text" />
                             </Template>
                         </RadzenDataGridColumn>
                     }
@@ -112,10 +112,15 @@
         User = authstate.User;
         await Refresh();
     }
-    private async Task DeleteQ(int id)
+    private async Task DeleteQuestion(int id)
     {
-        await QService.DeleteQ(id);
-        await Refresh();
+        bool? confirmed = await DialogService.Confirm("Are you sure to want to delete?", "Delete Question",
+                                                       new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No", CloseDialogOnOverlayClick = true });
+        if (confirmed.GetValueOrDefault())
+        {
+            await QService.DeleteQ(id);
+            await Refresh();
+        }
     }
 
     private async Task Refresh()

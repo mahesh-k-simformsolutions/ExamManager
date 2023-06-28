@@ -1,15 +1,17 @@
 ﻿@inherits LayoutComponentBase
 @using ExamManagementSystem.Data;
+@using ExamManagementSystem.Hubs;
 @using Microsoft.AspNetCore.SignalR.Client;
 @using ExamManagementSystem.Hubs.Connection;
 @using ExamManagementSystem.Enums;
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NotificationService NotificationService
+@inject AlertService AlertService
 @inject SignalRBlazorHubConnection Connection
 @inject NavigationManager UriHelper
 @inject IJSRuntime JsRuntime
-
+@inject DataStore DataStore
 <PageTitle>ExamManagementSystem</PageTitle>
 
 <div class="page">
@@ -18,12 +20,12 @@
     </div>
 
     <main>
-        <div class="top-row px-4 auth">
+        <div class="top-row px-4 auth bg-light">
             <LoginDisplay />
             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
         </div>
-
-        <article class="content px-4">
+        <ExamManagementSystem.Pages.RadzenCustom.Alert.RadzenAlertCustom />
+        <article class="content">
             @Body
         </article>
     </main>
@@ -32,15 +34,12 @@
 <RadzenNotification />
 <RadzenContextMenu />
 <RadzenTooltip />
-
 @code {
     private HubConnection _hubConnection;
-
     private async void OnUserLoginStateChanged(Task<AuthenticationState> task)
     {
         await RegisterSignalRMethods(task);
     }
-
     protected override async Task OnInitializedAsync()
     {
         var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -64,32 +63,37 @@
 
             _hubConnection.On<Exam>("NotifyExamStatus", (exam) =>
                    {
-                       NotificationSeverity severity = NotificationSeverity.Info;
+                       AlertStyle style = AlertStyle.Info;
                        string message = $"Exam - {exam.ExamName} ({exam.ExamCode}) has been {exam.ExamStatus.ToString().ToLower()}";
                        switch (exam.ExamStatus)
                        {
                            case EnumExamStatus.Started:
-                               severity = NotificationSeverity.Info;
+                               style = AlertStyle.Info;
                                break;
                            case EnumExamStatus.Completed:
-                               severity = NotificationSeverity.Success;
+                               style = AlertStyle.Success;
                                break;
                            case EnumExamStatus.Cancelled:
-                               severity = NotificationSeverity.Error;
+                               style = AlertStyle.Danger;
                                break;
                            case EnumExamStatus.NotStarted:
                                message = $"You have new Exam - {exam.ExamName} ({exam.ExamCode}) on {exam.Date.ToString("D")} - {exam.StartTime.ToString("hh:mm tt")})";
                                break;
                        }
-                       NotificationService.Notify(new NotificationMessage
-                           {
-                               Severity = severity,
-                               Summary = message,
-                               Duration = 10000,
-                               CloseOnClick = true,
-                               Click = (message) => { UriHelper.NavigateTo($"exam/{exam.Id}"); }
-                           });
+
+                       AlertService.Alert(new RadzenAlert() { Text = message, AlertStyle = style });
+
+                       DataStore.OnDataChanged();
+                       InvokeAsync(() =>
+                       {
+                           StateHasChanged();
+                       });
                    });
         }
+    }
+    public class Alert
+    {
+        public string Text { get; set; }
+        public AlertStyle AlertStyle { get; set; }
     }
 }

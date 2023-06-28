@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.Components;
+using Radzen;
+using static ExamManagementSystem.Shared.MainLayout;
 
 namespace ExamManagementSystem.Hubs.Connection
 {
@@ -7,12 +9,10 @@ namespace ExamManagementSystem.Hubs.Connection
     public class SignalRBlazorHubConnection
     {
         private bool _isInitialized = false;
-        private readonly NavigationManager _navigationManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SignalRBlazorHubConnection(NavigationManager navigationManager, IHttpContextAccessor httpContextAccessor)
+        public SignalRBlazorHubConnection(IHttpContextAccessor httpContextAccessor)
         {
-            _navigationManager = navigationManager;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -24,9 +24,9 @@ namespace ExamManagementSystem.Hubs.Connection
                 if (httpContext != null && httpContext.User != null && httpContext.User.Identity.IsAuthenticated)
                 {
                     var authToken = httpContext.Request.Cookies[".AspNetCore.Identity.Application"];
-
+                    var url = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/notificationhub";
                     HubConnection = new HubConnectionBuilder()
-                        .WithUrl(_navigationManager.ToAbsoluteUri("/notificationhub"), options =>
+                        .WithUrl(url, options =>
                         {
                             options.Cookies.Add(new System.Net.Cookie(".AspNetCore.Identity.Application", authToken, "/", "localhost"));
 

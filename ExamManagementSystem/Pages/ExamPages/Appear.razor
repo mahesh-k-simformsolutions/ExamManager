@@ -1,4 +1,5 @@
 ﻿@page "/appear/{examId:int}"
+<PageTitle>Appear</PageTitle>
 
 @using ExamManagementSystem.Data
 @using ExamManagementSystem.Helpers;
@@ -13,6 +14,8 @@
 @inject DialogService DialogService
 @inject IJSRuntime JsRuntime
 
+@attribute [Authorize(Policy = "VerifiedUser")]
+
 @if (Exam == null)
 {
     <div class="rz-p-12 rz-text-align-center">
@@ -25,9 +28,9 @@ else
         <div class="row">
             @if (!Exam.IsAppearedByCurrentStudent)
             {
-            <div class="col-md-12 border border-1 pt-2 text-center sticky-top bg-light">
-                <Timer DurationInMinutes="@Exam.RelativeDuration" AutoSubmitCallback="SubmitExam"></Timer>
-            </div>
+                <div class="col-md-12 border border-1 pt-2 text-center sticky-top bg-light">
+                    <Timer DurationInMinutes="@Exam.RelativeDuration" AutoSubmitCallback="SubmitExam"></Timer>
+                </div>
             }
             <div class="col-md-12 border border-1 p-2 text-center">
                 <h3>@Exam.ExamName [@Exam.ExamCode]</h3><br />
@@ -58,7 +61,7 @@ else
                 {
                     <div class="col-md-12 mt-5 border border-0 border-top border-bottom" style="max-height: 45vh; overflow-y: auto;">
                         @if (Exam.Questions != null)
-                        { 
+                        {
                             @foreach (var item in Exam.Questions)
                             {
                                 var bindAnswer = Answers.First(x => x.QuestionId == item.Id);

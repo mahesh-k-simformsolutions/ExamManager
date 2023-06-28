@@ -1,12 +1,13 @@
 ﻿@page "/myexams"
 
-<PageTitle>Exams</PageTitle>
+<PageTitle>My exams</PageTitle>
 
 @using ExamManagementSystem.Data
 @using ExamManagementSystem.Helpers
 @using ExamManagementSystem.Pages.Component
 @inject ExamManagementSystem.Service.ExamService ExamService
 @inject NavigationManager UriHelper
+@inject DataStore DataStore
 
 @attribute [Authorize(Roles = "Student")]
 <RadzenText TextStyle="TextStyle.DisplayH4" Text="Exams" />
@@ -52,7 +53,20 @@
     private List<Exam> exams;
     protected override async Task OnInitializedAsync()
     {
-
+        await Refresh();
+        DataStore.DataChanged += Refresh;
+    }
+    async Task Refresh()
+    {
         exams = await ExamService.MyExams();
+        await InvokeAsync(() =>
+                      {
+                          StateHasChanged();
+                      });
+        //  examsGrid?.Reload();
+    }
+    public void Dispose()
+    {
+        DataStore.DataChanged -= Refresh;
     }
 }

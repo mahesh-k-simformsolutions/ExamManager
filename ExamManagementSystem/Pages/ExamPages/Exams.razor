@@ -13,7 +13,7 @@
 @inject AuthenticationStateProvider AuthProvider
 @inject DialogService DialogService
 
-@attribute [Authorize(Roles = "Teacher,Admin")]
+@attribute [Authorize(Policy = "VerifiedTeacherOrAdmin")]
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
     <RadzenText TextStyle="TextStyle.DisplayH4" Text="Exams" />
@@ -60,14 +60,14 @@
                 <RadzenText Text="@data.Teacher!.Name" />
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Exam" Title="Action">
+        <RadzenDataGridColumn TItem="Exam" Title="Action" Width="8%">
             <Template Context="data">
                 @if (IsEditable(data))
                 {
                     <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Primary" Click=@(args => UriHelper.NavigateTo("editexam/" + @data.Id))
-                              Text="Edit" Size="ButtonSize.ExtraSmall" />
+                                  title="Edit" Size="ButtonSize.ExtraSmall" Icon="edit" Variant="Variant.Text" />
                     <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Click=@(args => DeleteExam(@data.Id))
-                              Text="Delete" Size="ButtonSize.ExtraSmall" />
+                                  title="Delete" Size="ButtonSize.ExtraSmall" Icon="delete" Variant="Variant.Text" />
                 }
             </Template>
         </RadzenDataGridColumn>
@@ -92,8 +92,13 @@
     }
     private async Task DeleteExam(int id)
     {
-        await ExamService.DeleteExam(id);
-        await Refresh();
+        bool? confirmed = await DialogService.Confirm("Are you sure to want to delete?", "Delete Exam",
+                                                        new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No", CloseDialogOnOverlayClick = true });
+        if (confirmed.GetValueOrDefault())
+        {
+            await ExamService.DeleteExam(id);
+            await Refresh();
+        }
     }
     private async Task Refresh()
     {

@@ -44,7 +44,8 @@ namespace ExamManagementSystem.Helpers
                 {
                     Name = name,
                     UserName = userName,
-                    Email = userName
+                    Email = userName,
+                    Verified = true
                 };
                 IdentityResult result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)

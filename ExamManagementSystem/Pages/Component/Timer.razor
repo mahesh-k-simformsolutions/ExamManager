@@ -1,6 +1,6 @@
 ﻿@page "/timer"
 
-@inject NotificationService NotificationService
+@inject AlertService AlertService
 
 <RadzenText TextStyle="TextStyle.Subtitle2" class="@GetTimerColor(elapsedTime)"><b>Time left:  @FormatTime(elapsedTime)</b></RadzenText>
 
@@ -38,13 +38,13 @@
         // Notify when 10 minutes left
         if (elapsedTime == 600)
         {
-            NotificationService.Notify(new NotificationMessage() { Severity = NotificationSeverity.Warning, Summary = "You have 10 minutes left" });
+            AlertService.Alert(new RadzenAlert() { AlertStyle = AlertStyle.Warning, Text = "You have 10 minutes left" });
         }
 
         if (elapsedTime == 300)
         {
             // Pre auto submit exam notification
-            NotificationService.Notify(new NotificationMessage() { Severity = NotificationSeverity.Warning, Summary = "Exam will be auto submitted in next 5 minutes" });
+            AlertService.Alert(new RadzenAlert() { AlertStyle = AlertStyle.Warning, Text = "Exam will be auto submitted in next 5 minutes" });
         }
 
         if (elapsedTime == 0)

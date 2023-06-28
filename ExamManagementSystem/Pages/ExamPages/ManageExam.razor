@@ -1,7 +1,7 @@
 ﻿@page "/createexam"
 @page "/editexam/{examId:int}"
 
-<PageTitle>@Title Exam</PageTitle>
+<PageTitle>@PageTitle</PageTitle>
 
 @using ExamManagementSystem.Data
 @using ExamManagementSystem.Enums
@@ -17,7 +17,7 @@
 @inject AuthenticationStateProvider AuthProvider
 
 
-@attribute [Authorize(Roles = "Teacher,Admin")]
+@attribute [Authorize(Policy = "VerifiedTeacherOrAdmin")]
 @if (Exam == null)
 {
 
@@ -68,8 +68,8 @@ else
                                 </RadzenFormField>
                             </RadzenStack>
                             <RadzenStack Orientation=Orientation.Horizontal>
-                                <RadzenDropDown @bind-Value=@SelectedStudents Data=@Students TextProperty="Name" ValueProperty="Id" Multiple=true AllowClear=true Placeholder="Select student"
-                                        AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectAllText="Select all students"
+                                <RadzenDropDown @bind-Value=@SelectedStudents Data=@Students TextProperty="VerifiedName" ValueProperty="Id" Multiple=true AllowClear=true Placeholder="Select student"
+                                        AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectAllText="Select all students" DisabledProperty="NotVerified"
                                         SelectedItemsText="selected" Style="width: 75%;" Disabled="@(Exam.Id > 0 && Exam.ExamStatus != EnumExamStatus.NotStarted)" />
                                 <RadzenDropDown Data="@(Enum.GetValues(typeof(EnumExamStatus)).Cast<Enum>())" @bind-Value=@Exam.ExamStatus Change="@(ar => OnExamStatusChanged(ar))"
                                         Disabled="@(Exam.Id == 0)" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width: 25%;" />
@@ -107,16 +107,14 @@ else
     [Parameter]
     public int examId { get; set; }
 
-    bool IsEditable { get { return (Exam != null && (Exam.Id == 0 || Exam.ExamStatus == EnumExamStatus.NotStarted)); } }
-
-    string Title { get { return examId == 0 ? "Conduct" : "Edit"; } }
+    public bool IsEditable { get; set; } = true;
 
     EditContext? EditContext;
     Exam Exam;
     List<User> Students = new List<User>();
     List<string> SelectedStudents = new List<string>();
     List<string> OriginalSelectedStudents = new List<string>();
-
+    string PageTitle { get => (EditContext != null && EditContext.IsModified() ? "**" : "") + (examId == 0 ? "Conduct" : "Edit") + " Exam - " + Exam?.ExamName; }
     protected override async Task OnInitializedAsync()
     {
         try
@@ -129,6 +127,7 @@ else
             else
             {
                 this.Exam = await ExamService.GetExamById(examId);
+                this.IsEditable = Exam.ExamStatus == EnumExamStatus.NotStarted;
                 SelectedStudents = this.Exam.ExamToStudents.Select(x => x.StudentId).ToList();
                 OriginalSelectedStudents = this.Exam.ExamToStudents.Select(x => x.StudentId).ToList();
             }
