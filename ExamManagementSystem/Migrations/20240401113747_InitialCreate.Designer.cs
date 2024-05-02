@@ -12,14 +12,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExamManagementSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230512041808_EnumColumnsAddedToTable")]
-    partial class EnumColumnsAddedToTable
+    [Migration("20240401113747_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.15")
+                .HasAnnotation("ProductVersion", "6.0.18")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
@@ -35,6 +35,9 @@ namespace ExamManagementSystem.Migrations
                     b.Property<int>("AnswerId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ExamId")
+                        .HasColumnType("int");
+
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
@@ -45,6 +48,8 @@ namespace ExamManagementSystem.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AnswerId");
+
+                    b.HasIndex("ExamId");
 
                     b.HasIndex("QuestionId");
 
@@ -180,6 +185,9 @@ namespace ExamManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
                     b.Property<string>("OptText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -202,49 +210,16 @@ namespace ExamManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("CorrectOptionId")
-                        .HasColumnType("int");
-
                     b.Property<float>("Marks")
                         .HasColumnType("real");
 
                     b.Property<string>("QuestionText")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("ExamManagementSystem.Data.ScoreCard", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("CorrectAnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<float>("ObtainedMarks")
-                        .HasColumnType("real");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SelectedAnswerId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CorrectAnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.HasIndex("SelectedAnswerId");
-
-                    b.ToTable("ScoreCards");
                 });
 
             modelBuilder.Entity("ExamManagementSystem.Data.User", b =>
@@ -301,6 +276,9 @@ namespace ExamManagementSystem.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -460,6 +438,12 @@ namespace ExamManagementSystem.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ExamManagementSystem.Data.Exam", "Exam")
+                        .WithMany()
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ExamManagementSystem.Data.Question", "Question")
                         .WithMany()
                         .HasForeignKey("QuestionId")
@@ -471,6 +455,8 @@ namespace ExamManagementSystem.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Exam");
 
                     b.Navigation("Option");
 
@@ -491,7 +477,7 @@ namespace ExamManagementSystem.Migrations
             modelBuilder.Entity("ExamManagementSystem.Data.ExamResult", b =>
                 {
                     b.HasOne("ExamManagementSystem.Data.Exam", "Exam")
-                        .WithMany()
+                        .WithMany("Results")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -510,13 +496,13 @@ namespace ExamManagementSystem.Migrations
             modelBuilder.Entity("ExamManagementSystem.Data.ExamToQuestion", b =>
                 {
                     b.HasOne("ExamManagementSystem.Data.Exam", "Exam")
-                        .WithMany()
+                        .WithMany("ExamToQuestions")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ExamManagementSystem.Data.Question", "Question")
-                        .WithMany()
+                        .WithMany("ExamToQuestions")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -529,7 +515,7 @@ namespace ExamManagementSystem.Migrations
             modelBuilder.Entity("ExamManagementSystem.Data.ExamToStudent", b =>
                 {
                     b.HasOne("ExamManagementSystem.Data.Exam", "Exam")
-                        .WithMany()
+                        .WithMany("ExamToStudents")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -554,33 +540,6 @@ namespace ExamManagementSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("Question");
-                });
-
-            modelBuilder.Entity("ExamManagementSystem.Data.ScoreCard", b =>
-                {
-                    b.HasOne("ExamManagementSystem.Data.Answer", "CorrectAnswer")
-                        .WithMany()
-                        .HasForeignKey("CorrectAnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ExamManagementSystem.Data.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ExamManagementSystem.Data.Answer", "SelectedAnswer")
-                        .WithMany()
-                        .HasForeignKey("SelectedAnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CorrectAnswer");
-
-                    b.Navigation("Question");
-
-                    b.Navigation("SelectedAnswer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -634,8 +593,19 @@ namespace ExamManagementSystem.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ExamManagementSystem.Data.Exam", b =>
+                {
+                    b.Navigation("ExamToQuestions");
+
+                    b.Navigation("ExamToStudents");
+
+                    b.Navigation("Results");
+                });
+
             modelBuilder.Entity("ExamManagementSystem.Data.Question", b =>
                 {
+                    b.Navigation("ExamToQuestions");
+
                     b.Navigation("Options");
                 });
 #pragma warning restore 612, 618
