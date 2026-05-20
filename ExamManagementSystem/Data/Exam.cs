@@ -26,14 +26,14 @@ namespace ExamManagementSystem.Data
         /// <summary>
         /// 00:00:00 to 23:59:59
         /// </summary>
-        [Required]
+        [NonDefaultDateTime("Start Time")]
         public DateTime StartTime { get; set; }
 
-        [Required]
+        [NonDefaultDateTime("End Time")]
         [EndTimeGreaterThanStartTime]
         public DateTime EndTime { get; set; }
 
-        [Required]
+        [NonDefaultDateTime("Date")]
         public DateTime Date { get; set; }
 
         public EnumExamStatus ExamStatus { get; set; } = EnumExamStatus.NotStarted;
@@ -43,7 +43,7 @@ namespace ExamManagementSystem.Data
         public User? Teacher { get; set; }
 
         public string ExamCode { get; set; } = Helpers.Helpers.GenerateCode();
-        [Required]
+        [Required(ErrorMessage = "Exam Name is required.")]
         public string ExamName { get; set; }
 
         public ICollection<ExamResult> Results { get; set; }
@@ -69,6 +69,10 @@ namespace ExamManagementSystem.Data
                 return ExamToStudents?.Select(x => x.Student).ToList();
             }
         }
+
+        [NotMapped]
+        [MinLength(1, ErrorMessage = "Please select at least one student.")]
+        public List<string> SelectedStudentIds { get; set; } = new();
 
         public ICollection<ExamToQuestion> ExamToQuestions { get; set; }
         public ICollection<ExamToStudent> ExamToStudents { get; set; }
