@@ -68,12 +68,13 @@ else
                                 </RadzenFormField>
                             </RadzenStack>
                             <RadzenStack Orientation=Orientation.Horizontal>
-                                <RadzenDropDown @bind-Value=@SelectedStudents Data=@Students TextProperty="VerifiedName" ValueProperty="Id" Multiple=true AllowClear=true Placeholder="Select student"
+                                <RadzenDropDown @bind-Value=@Exam.SelectedStudentIds Data=@Students TextProperty="VerifiedName" ValueProperty="Id" Multiple=true AllowClear=true Placeholder="Select student"
                                         AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectAllText="Select all students" DisabledProperty="NotVerified"
                                         SelectedItemsText="selected" Style="width: 75%;" Disabled="@(Exam.Id > 0 && Exam.ExamStatus != EnumExamStatus.NotStarted)" />
                                 <RadzenDropDown Data="@(Enum.GetValues(typeof(EnumExamStatus)).Cast<Enum>())" @bind-Value=@Exam.ExamStatus Change="@(ar => OnExamStatusChanged(ar))"
                                         Disabled="@(Exam.Id == 0)" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width: 25%;" />
                             </RadzenStack>
+                            <ValidationMessage For="@(() => Exam.SelectedStudentIds)" />
                             <div class="col-md-12 p-2 mb-5 text-center">
                                 <RadzenButton ButtonType="ButtonType.Submit" Disabled="!EditContext.Validate()" Text="Save" />
                             </div>
@@ -112,7 +113,6 @@ else
     EditContext? EditContext;
     Exam Exam;
     List<User> Students = new List<User>();
-    List<string> SelectedStudents = new List<string>();
     List<string> OriginalSelectedStudents = new List<string>();
     string PageTitle { get => (EditContext != null && EditContext.IsModified() ? "**" : "") + (examId == 0 ? "Conduct" : "Edit") + " Exam - " + Exam?.ExamName; }
     protected override async Task OnInitializedAsync()
@@ -128,8 +128,8 @@ else
             {
                 this.Exam = await ExamService.GetExamById(examId);
                 this.IsEditable = Exam.ExamStatus == EnumExamStatus.NotStarted;
-                SelectedStudents = this.Exam.ExamToStudents.Select(x => x.StudentId).ToList();
-                OriginalSelectedStudents = this.Exam.ExamToStudents.Select(x => x.StudentId).ToList();
+                this.Exam.SelectedStudentIds = this.Exam.ExamToStudents.Select(x => x.StudentId).ToList();
+                OriginalSelectedStudents = this.Exam.SelectedStudentIds.ToList();
             }
 
             EditContext = new EditContext(Exam);
@@ -144,7 +144,7 @@ else
     {
         if (EnumExamStatus.NotStarted != (EnumExamStatus)examStatus)
         {
-            SelectedStudents = OriginalSelectedStudents;
+            Exam.SelectedStudentIds = OriginalSelectedStudents.ToList();
         }
     }
 
@@ -163,7 +163,7 @@ else
         {
             await ExamService.SaveExam(Exam);
             List<ExamToStudent> examToStudents = new List<ExamToStudent>();
-            foreach (var sId in SelectedStudents)
+            foreach (var sId in Exam.SelectedStudentIds)
             {
                 examToStudents.Add(new ExamToStudent()
                     {

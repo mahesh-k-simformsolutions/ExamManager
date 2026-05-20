@@ -70,6 +70,10 @@ namespace ExamManagementSystem.Data
             }
         }
 
+        [NotMapped]
+        [MinLength(1, ErrorMessage = "Please select at least one student.")]
+        public List<string> SelectedStudentIds { get; set; } = new();
+
         public ICollection<ExamToQuestion> ExamToQuestions { get; set; }
         public ICollection<ExamToStudent> ExamToStudents { get; set; }
     }
