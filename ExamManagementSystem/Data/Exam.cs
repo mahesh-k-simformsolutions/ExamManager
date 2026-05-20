@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExamManagementSystem.Data
 {
-    public class Exam : EntityBase, IValidatableObject
+    public class Exam : EntityBase
     {
         /// <summary>
         /// Duration in minutes
@@ -26,14 +26,14 @@ namespace ExamManagementSystem.Data
         /// <summary>
         /// 00:00:00 to 23:59:59
         /// </summary>
-        [Required(ErrorMessage = "Start Time is required.")]
+        [NonDefaultDateTime("Start Time")]
         public DateTime StartTime { get; set; }
 
-        [Required(ErrorMessage = "End Time is required.")]
+        [NonDefaultDateTime("End Time")]
         [EndTimeGreaterThanStartTime]
         public DateTime EndTime { get; set; }
 
-        [Required(ErrorMessage = "Date is required.")]
+        [NonDefaultDateTime("Date")]
         public DateTime Date { get; set; }
 
         public EnumExamStatus ExamStatus { get; set; } = EnumExamStatus.NotStarted;
@@ -76,24 +76,6 @@ namespace ExamManagementSystem.Data
 
         public ICollection<ExamToQuestion> ExamToQuestions { get; set; }
         public ICollection<ExamToStudent> ExamToStudents { get; set; }
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (Date == default)
-            {
-                yield return new ValidationResult("Date is required.", new[] { nameof(Date) });
-            }
-
-            if (StartTime == default)
-            {
-                yield return new ValidationResult("Start Time is required.", new[] { nameof(StartTime) });
-            }
-
-            if (EndTime == default)
-            {
-                yield return new ValidationResult("End Time is required.", new[] { nameof(EndTime) });
-            }
-        }
     }
 
 }
